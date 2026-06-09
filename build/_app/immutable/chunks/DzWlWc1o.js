@@ -1,0 +1,23 @@
+import{B as e,D as t,E as n,F as r,I as i,J as a,M as o,O as s,Q as c,R as l,S as u,T as d,U as f,V as p,Y as m,Z as h,a as g,b as _,c as v,h as y,i as b,l as ee,y as x}from"./D075GsBq.js";import"./xihTtKlq.js";var te=u(`<div class="fountain-editor svelte-k5lkzr"><div class="panel-header flex flex-wrap items-center gap-1"><button class="toolbar-btn" aria-label="Insert scene heading">SCENE</button> <button class="toolbar-btn" aria-label="Insert character">CHAR.</button> <button class="toolbar-btn" aria-label="Insert dialogue">DIAL.</button> <button class="toolbar-btn" aria-label="Insert parenthetical">( )</button> <button class="toolbar-btn" aria-label="Insert transition">TRANS.</button> <span class="toolbar-sep"></span> <button class="toolbar-btn" aria-label="Insert page break">PAGE BRK</button> <span class="toolbar-sep"></span> <button class="toolbar-btn" aria-label="Insert title page title">TITLE</button> <button class="toolbar-btn" aria-label="Insert title page author">AUTHOR</button></div> <div class="editor-body svelte-k5lkzr"><div class="highlight-layer svelte-k5lkzr"><!><span class="sp-cursor-guard">&nbsp;</span></div> <textarea class="editor-textarea svelte-k5lkzr" spellcheck="true"></textarea></div> <div class="footer-stats svelte-k5lkzr"><span class="stat svelte-k5lkzr"> </span> <span class="stat svelte-k5lkzr"> </span></div></div>`);function S(u,d){m(d,!0);let S=b(d,`content`,3,``),C=b(d,`placeholder`,3,`Start writing your screenplay in Fountain...`),w=b(d,`onUpdate`,3,e=>{}),T=p(void 0),E=f(()=>O(S()));function D(e){return e.replace(/&/g,`&amp;`).replace(/</g,`&lt;`).replace(/>/g,`&gt;`)}function O(e){let t=e.split(`
+`),n=[],r=!0,i=!1;for(let e=0;e<t.length;e++){let a=t[e],o=a.trim();if(i){if(o.includes(`*/`)){let e=a.indexOf(`*/`),t=a.substring(0,e+2),r=a.substring(e+2);i=!1,n.push(`<span class="sp-comment">${D(t)}</span>${D(r)}`)}else n.push(`<span class="sp-comment">${D(a)}</span>`);r=o===``;continue}if(/\/\*/.test(o)&&!/\*\/\s*$/.test(o)){i=!0,n.push(`<span class="sp-comment">${D(a)}</span>`),r=o===``;continue}let s=``,c=o.toUpperCase();o===``?(s=``,r=!0):/^={3,}\s*$/.test(o)?(s=`sp-page-break`,r=!0):/^\[/.test(o)||/^\/\*/.test(o)?(s=`sp-comment`,r=!1):/^(INT\.|EXT\.|INT\.\/EXT\.)/i.test(o)||/^\./.test(o)&&!/^\.\./.test(o)?(s=`sp-scene-heading`,r=!1):/^>/.test(o)&&/<\s*$/.test(o)?(s=`sp-centered`,r=!1):/^>/.test(o)||/\bTO:\s*$/.test(o)&&o===c&&o.length<=30?(s=`sp-transition`,r=!1):/^~/.test(o)?(s=`sp-lyrics`,r=!1):/^\(/.test(o)?(s=`sp-parenthetical`,r=!1):r&&o===c&&/[A-Z]{2,}/.test(o)&&!/[a-z]/.test(o)||e===0&&o===c&&/[A-Z]{2,}/.test(o)&&!/[a-z]/.test(o)?(s=`sp-character`,r=!1):(/^(Title|Author|Source|Notes|Draft Date|Contact|Copyright):\s*/i.test(o)&&(s=`sp-title-key`),r=!1),s?n.push(`<span class="${s}">${D(a)}</span>`):n.push(D(a)),/\*\/\s*$/.test(o)&&/\/\*/.test(o)&&(i=!1)}return n.join(`
+`)}function k(e,t=``){if(!s(T))return;let n=s(T).selectionStart,r=s(T).selectionEnd,i=e+s(T).value.substring(n,r)+t,a=s(T).value.substring(0,n)+i+s(T).value.substring(r);s(T).value=a,s(T).selectionStart=Math.min(n+e.length,a.length),s(T).selectionEnd=s(T).selectionStart,s(T).focus(),s(T).dispatchEvent(new Event(`input`,{bubbles:!0}))}function A(){if(!s(T))return!1;let e=s(T).value.substring(0,s(T).selectionStart);return e.length>0&&!e.endsWith(`
+
+`)&&!e.endsWith(`
+`)}function j(){s(T)&&k((A()?`
+`:``)+`INT. LOCATION - DAY
+
+`,``)}function M(){if(!s(T))return;let e=s(T).selectionStart,t=s(T).selectionEnd,n=s(T).value.substring(e,t).trim(),r=A()?`
+`:``;k(n?r+n.toUpperCase()+`
+`:r+`CHARACTER NAME
+`,``)}function ne(){k(`
+	`,`
+`)}function re(){k(`(`,`)`)}function ie(){k(`
+> CUT TO:
+
+`)}function ae(){k(`
+===
+
+`)}function N(){s(T)&&w()(s(T).value)}function P(){return s(T)?s(T).value.split(`
+`).length:0}function F(){return s(T)?s(T).value.trim().split(/\s+/).filter(Boolean).length:0}let I=p(void 0);function L(){s(I)&&s(T)&&(s(I).scrollTop=s(T).scrollTop,s(I).scrollLeft=s(T).scrollLeft)}var R=te(),z=i(R),B=i(z),V=l(B,2),H=l(V,2),U=l(H,2),W=l(U,2),G=l(W,4),K=l(G,4),q=l(K,2);c(z);var J=l(z,2),Y=i(J);y(i(Y),()=>s(E)),h(),c(Y),g(Y,t=>e(I,t),()=>s(I));var X=l(Y,2);r(X),g(X,t=>e(T,t),()=>s(T)),c(J);var Z=l(J,2),Q=i(Z),oe=i(Q);c(Q);var $=l(Q,2),se=i($);c($),c(Z),c(R),o((e,t)=>{ee(X,S()),v(X,`placeholder`,C()),x(oe,`${e??``} lines`),x(se,`${t??``} words`)},[()=>P(),()=>F()]),n(`click`,B,j),n(`click`,V,M),n(`click`,H,ne),n(`click`,U,re),n(`click`,W,ie),n(`click`,G,ae),n(`click`,K,()=>k(`Title: `,`
+`)),n(`click`,q,()=>k(`Author: `,`
+`)),n(`input`,X,N),t(`scroll`,X,L),_(u,R),a()}d([`click`,`input`]);export{S as default};

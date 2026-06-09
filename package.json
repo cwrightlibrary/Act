@@ -1,0 +1,40 @@
+{
+	"name": "story-builder",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync || echo ''",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-auto": "^7.0.1",
+		"@sveltejs/adapter-static": "^3.0.10",
+		"@sveltejs/kit": "^2.57.0",
+		"@sveltejs/vite-plugin-svelte": "^7.0.0",
+		"@tailwindcss/vite": "^4.3.0",
+		"@types/turndown": "^5.0.6",
+		"svelte": "^5.55.2",
+		"svelte-check": "^4.4.6",
+		"tailwindcss": "^4.3.0",
+		"typescript": "^6.0.2",
+		"vite": "^8.0.7"
+	},
+	"dependencies": {
+		"@tiptap/core": "^3.26.0",
+		"@tiptap/extension-placeholder": "^3.26.0",
+		"@tiptap/extension-underline": "^3.26.0",
+		"@tiptap/pm": "^3.26.0",
+		"@tiptap/starter-kit": "^3.26.0",
+		"dexie": "^4.4.3",
+		"fountain-js": "^1.2.4",
+		"jspdf": "^4.2.1",
+		"nanoid": "^5.1.11",
+		"tiptap": "^1.32.2",
+		"turndown": "^7.2.4"
+	}
+}
