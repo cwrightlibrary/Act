@@ -1,0 +1,12 @@
+name = "story-builder"
+type = "javascript"
+compatibility_date = "2025-06-09"
+
+# Pages configuration
+pages_build_caching = true
+build_command = "npm run cf-build"
+build_output_dir = "build"
+
+[env.production]
+name = "story-builder-prod"
+
