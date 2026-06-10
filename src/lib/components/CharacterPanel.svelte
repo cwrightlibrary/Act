@@ -82,7 +82,7 @@
 			case 'antagonist':
 				return 'var(--warm)';
 			case 'supporting':
-				return '#2563eb';
+				return 'var(--accent)';
 			default:
 				return 'var(--text-dim)';
 		}
@@ -135,6 +135,19 @@
 		char.arc = value;
 		onchange();
 	}
+
+	// ── Escape key cancels inline editing ──
+	$effect(() => {
+		if (!editingCharId) return;
+		function handleKeydown(e: KeyboardEvent) {
+			if (e.key === 'Escape') {
+				editingCharId = null;
+				e.preventDefault();
+			}
+		}
+		window.addEventListener('keydown', handleKeydown);
+		return () => window.removeEventListener('keydown', handleKeydown);
+	});
 </script>
 
 <div class="char-panel">
@@ -244,7 +257,6 @@
 									oninput={(e) => updateCharName(char, (e.target as HTMLInputElement).value)}
 									class="field-input w-full text-sm"
 									placeholder="Character name"
-									autofocus
 								/>
 							</div>
 
@@ -256,6 +268,7 @@
 										value={char.role}
 										onchange={(e) => updateCharRole(char, (e.target as HTMLSelectElement).value)}
 										class="char-role-select"
+										aria-label="Character role"
 									>
 										{#each roleOptions as opt}
 											<option value={opt.value}>{opt.label}</option>
@@ -264,6 +277,7 @@
 									<span
 										class="char-role-dot"
 										style="background: {roleBadgeColor(char.role)};"
+										title="Current role: {char.role}"
 									></span>
 								</div>
 							</div>

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getAllStories, saveStory, deleteStory, getAllScreenplays } from '$lib/persistence/db';
-	import { createStory, type Story, type Screenplay } from '$lib/domain/story';
+	import { createStory, type Story } from '$lib/domain/story';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { importActFile, ActImportError } from '$lib/import';
@@ -92,9 +92,9 @@
 		</div>
 
 		{#if importError}
-			<div class="flex items-center justify-between border-b px-5 py-2 text-xs" style="background: #fff0f0; color: #c00; border-color: #fcc;" role="alert">
+			<div class="flex items-center justify-between border-b px-5 py-2 text-xs" style="background: oklch(from var(--warm) l c h / 0.12); color: var(--warm); border-color: oklch(from var(--warm) l c h / 0.22);" role="alert">
 				<span>{importError}</span>
-				<button onclick={() => (importError = null)} class="ml-3 font-bold leading-none" style="color: #c00; font-size: 1.1rem;">&times;</button>
+				<button onclick={() => (importError = null)} class="ml-3 font-bold leading-none" style="color: var(--warm); font-size: 1.1rem;">&times;</button>
 			</div>
 		{/if}
 

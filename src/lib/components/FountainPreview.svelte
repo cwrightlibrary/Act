@@ -78,8 +78,8 @@
 		position: relative;
 		min-height: 100%;
 		padding: 0.5in 0;
-		background: #fff;
-		color: #000;
+		background: var(--bg-front);
+		color: var(--text-strong);
 	}
 
 	/* Page margins: 1.5" left, 1" right — scales down on narrow containers */
@@ -97,13 +97,13 @@
 		font-family: 'Courier Prime', 'Courier New', Courier, monospace;
 		font-size: 12px;
 		line-height: 1.25;
-		color: #000;
+		color: var(--text-strong);
 		overflow-wrap: break-word;
 		word-break: break-word;
 	}
 
 	.fountain-content .empty-state {
-		color: #999;
+		color: var(--text-dim);
 		font-style: italic;
 		font-size: 12px;
 		margin: 2in 0 0 0;
@@ -121,7 +121,7 @@
 		width: 8px;
 		height: 8px;
 		border-radius: 50%;
-		background: #888;
+		background: var(--text-dim);
 		opacity: 0.6;
 		animation: pulse 0.6s ease-in-out infinite alternate;
 		pointer-events: none;
@@ -138,9 +138,9 @@
 	.error-banner {
 		font-family: 'Courier Prime', 'Courier New', Courier, monospace;
 		font-size: 11px;
-		color: #c00;
-		background: #fff0f0;
-		border: 1px solid #fcc;
+		color: var(--warm);
+		background: oklch(from var(--warm) l c h / 0.12);
+		border: 1px solid oklch(from var(--warm) l c h / 0.22);
 		border-radius: 4px;
 		padding: 8px 12px;
 		margin-top: 1in;
@@ -160,7 +160,7 @@
 		text-underline-offset: 2px;
 		margin: 1.5em 0 1em 0;
 		padding: 0;
-		color: #000;
+		color: var(--text-strong);
 	}
 
 	/* ════════════════════════════════════════════
@@ -175,7 +175,7 @@
 		padding: 0;
 		margin-left: 2.5in;
 		text-align: right;
-		color: #000;
+		color: var(--text-strong);
 	}
 
 	/* ════════════════════════════════════════════
@@ -219,7 +219,7 @@
 		text-transform: uppercase;
 		margin: 1.2em 0 0.1em 1.2in;
 		padding: 0;
-		color: #000;
+		color: var(--text-strong);
 	}
 
 	/* ── Parenthetical inside dialogue ──
@@ -231,7 +231,7 @@
 		padding: 0;
 		width: 2.5in;
 		font-style: normal;
-		color: #000;
+		color: var(--text-strong);
 	}
 
 	/* ── Dialogue lines inside .dialogue ──
@@ -242,7 +242,7 @@
 		line-height: 1.25;
 		margin: 0 0 0.3em 0;
 		padding: 0;
-		color: #000;
+		color: var(--text-strong);
 		overflow-wrap: break-word;
 		word-break: break-word;
 	}
@@ -261,7 +261,7 @@
 		line-height: 1.25;
 		margin: 0 0 0.3em 0;
 		padding: 0;
-		color: #000;
+		color: var(--text-strong);
 		overflow-wrap: break-word;
 		word-break: break-word;
 	}
@@ -273,7 +273,7 @@
 		text-align: center;
 		margin: 1.5em 0;
 		width: 100%;
-		color: #000;
+		color: var(--text-strong);
 	}
 
 	/* ── Lyrics ── */
@@ -283,14 +283,14 @@
 		margin: 0.3em 0 0.3em 1.5in;
 		padding: 0 0 0 0.2in;
 		font-style: italic;
-		border-left: 2px solid #ccc;
-		color: #000;
+		border-left: 2px solid var(--border-base);
+		color: var(--text-strong);
 	}
 
 	/* ── Page break inside script ── */
 	.fountain-content :global(hr) {
 		border: none;
-		border-top: 1px dashed #888;
+		border-top: 1px dashed var(--text-dim);
 		margin: 2em 0;
 	}
 
@@ -305,7 +305,7 @@
 		min-height: 80vh;
 		padding: 1in 0;
 		text-align: center;
-		border-bottom: 1px dashed #bbb;
+		border-bottom: 1px dashed var(--border-base);
 		margin-bottom: 1.5em;
 	}
 
@@ -316,7 +316,7 @@
 		text-transform: uppercase;
 		margin: 0 0 0.4in 0;
 		padding: 0;
-		color: #000;
+		color: var(--text-strong);
 		letter-spacing: 0.02em;
 	}
 
@@ -325,7 +325,7 @@
 		font-size: 12px;
 		margin: 0 0 0.2in 0;
 		padding: 0;
-		color: #000;
+		color: var(--text-strong);
 	}
 
 	.title-page-preview :global(.authors) {
@@ -334,7 +334,7 @@
 		font-weight: 700;
 		margin: 0 0 0.3in 0;
 		padding: 0;
-		color: #000;
+		color: var(--text-strong);
 	}
 
 	.title-page-preview :global(.source),
@@ -345,6 +345,6 @@
 		font-size: 12px;
 		margin: 0.15in 0;
 		padding: 0;
-		color: #000;
+		color: var(--text-strong);
 	}
 </style>

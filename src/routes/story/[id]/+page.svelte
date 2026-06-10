@@ -5,6 +5,8 @@
 	import type { Story, Scene, Screenplay } from '$lib/domain/story';
 	import SceneEditor from '$lib/components/SceneEditor.svelte';
 	import CharacterPanel from '$lib/components/CharacterPanel.svelte';
+	import OutlinePreview from '$lib/components/OutlinePreview.svelte';
+	import CharactersPreview from '$lib/components/CharactersPreview.svelte';
 	import type { Component } from 'svelte';
 
 	let story = $state<Story | null>(null);
@@ -13,6 +15,8 @@
 	let sidebarOpen = $state(true);
 	type PreviewMode = 'closed' | 'outline' | 'characters';
 	let previewMode = $state<PreviewMode>('closed');
+	// Screenplay Fountain formatted preview visibility (hidden by default on mobile)
+	let previewVisible = $state(true);
 
 	function cyclePreview() {
 		const modes: PreviewMode[] = ['closed', 'outline', 'characters'];
@@ -28,6 +32,7 @@
 		}
 	}
 	let exportOpen = $state(false);
+	let exportContainer = $state<HTMLElement>();
 	let focusTrigger = $state(0);
 	let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -46,6 +51,13 @@
 		// Fountain components
 		import('$lib/components/FountainEditor.svelte').then((m) => (FountainEditor = m.default));
 		import('$lib/components/FountainPreview.svelte').then((m) => (FountainPreview = m.default));
+	});
+
+	// Set preview visibility based on viewport — hidden by default on mobile
+	$effect(() => {
+		if (typeof window !== 'undefined') {
+			previewVisible = !window.matchMedia('(max-width: 767px)').matches;
+		}
 	});
 
 	async function loadScreenplay() {
@@ -181,7 +193,7 @@
 		switch (char.role) {
 			case 'protagonist': return 'var(--primary)';
 			case 'antagonist': return 'var(--warm)';
-			case 'supporting': return '#2563eb';
+			case 'supporting': return 'var(--accent)';
 			default: return 'var(--text-dim)';
 		}
 	}
@@ -192,9 +204,9 @@
 	}
 
 	// ── Drag and drop reordering ──
-	let dragInfo: { sceneId: string; sourceActId: string; sourceIndex: number } | null = null;
-	let dropTargetActId: string | null = null;
-	let dropIndex: number | null = null;
+	let dragInfo = $state<{ sceneId: string; sourceActId: string; sourceIndex: number } | null>(null);
+	let dropTargetActId = $state<string | null>(null);
+	let dropIndex = $state<number | null>(null);
 
 	function handleDragStart(e: DragEvent, scene: Scene, actId: string) {
 		dragInfo = { sceneId: scene.id, sourceActId: actId, sourceIndex: scene.order };
@@ -385,6 +397,20 @@
 		return actOrder < story.acts.length - 1;
 	}
 
+	// ── Close export dropdown on click outside ──
+	$effect(() => {
+		if (!exportOpen) return;
+		function handleClick(e: MouseEvent) {
+			if (!exportContainer) return;
+			const target = e.target as Node;
+			if (target && !exportContainer.contains(target)) {
+				exportOpen = false;
+			}
+		}
+		queueMicrotask(() => window.addEventListener('click', handleClick));
+		return () => window.removeEventListener('click', handleClick);
+	});
+
 	// ── Global keyboard shortcuts ──
 	$effect(() => {
 		function handleKeydown(e: KeyboardEvent) {
@@ -394,6 +420,17 @@
 				e.preventDefault();
 				characterMode = !characterMode;
 				if (characterMode) screenplayMode = false;
+				return;
+			}
+			// Escape: close export dropdown, exit character mode
+			if (e.key === 'Escape') {
+				if (exportOpen) {
+					exportOpen = false;
+					e.preventDefault();
+				} else if (characterMode) {
+					characterMode = false;
+					e.preventDefault();
+				}
 			}
 		}
 		window.addEventListener('keydown', handleKeydown);
@@ -476,7 +513,7 @@
 									<span class="text-xs" style="color: var(--text-muted);">{act.scenes.length}</span>
 									<button
 										onclick={(e) => { e.stopPropagation(); deleteAct(act.id); }}
-										class="scene-delete-btn opacity-0 transition-opacity group-hover:opacity-100"
+										class="scene-delete-btn opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
 										aria-label="Delete act"
 									>&times;</button>
 								</div>
@@ -528,7 +565,7 @@
 												</span>
 											{/if}
 										</div>
-										<div class="scene-actions flex flex-shrink-0 items-center gap-px opacity-0 transition-opacity group-hover:opacity-100" class:opacity-100={selectedSceneId === scene.id}>
+										<div 									class="scene-actions flex flex-shrink-0 items-center gap-px opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" class:opacity-100={selectedSceneId === scene.id}>
 											<button
 												onclick={(e) => { e.stopPropagation(); moveSceneUp(act.id, scene.id); }}
 												class="scene-move-btn"
@@ -657,7 +694,7 @@
 
 				{#if !screenplayMode && !characterMode && selectedScene()}
 					{@const scene = selectedScene()!}
-					<div class="flex flex-1 flex-col gap-1 px-2 py-1">
+					<div class="hidden md:flex flex-1 flex-col gap-1 px-2 py-1">
 						<input
 							type="text"
 							bind:value={scene.title}
@@ -680,10 +717,9 @@
 				{/if}
 
 				<!-- Export (always visible) -->
-				<div class="relative ml-auto">
+				<div class="relative ml-auto" bind:this={exportContainer}>
 					<button
 						onclick={() => (exportOpen = !exportOpen)}
-						onblur={() => setTimeout(() => (exportOpen = false), 200)}
 						class="btn-ghost flex items-center gap-1.5 px-3 py-1.5 text-xs"
 						style="min-height: 36px;"
 						aria-label="Export"
@@ -755,89 +791,47 @@
 						</svg>
 						<span class="text-xs font-medium">{previewLabel()}</span>
 					</button>
+
+				<!-- Screenplay Fountain preview toggle — shown only in screenplay mode -->
+				{#if screenplayMode}
+					<button
+						onclick={() => (previewVisible = !previewVisible)}
+						class="btn-ghost flex items-center justify-center px-2 py-1.5 text-xs"
+						style="min-height: 36px; min-width: 36px;"
+						aria-label={previewVisible ? 'Hide formatted preview' : 'Show formatted preview'}
+						title={previewVisible ? 'Hide formatted preview' : 'Show formatted preview'}
+					>
+						<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+							{#if previewVisible}
+								<path d="M1.5 6.5s2-4 5-4 5 4 5 4-2 4-5 4-5-4-5-4Z" />
+								<circle cx="6.5" cy="6.5" r="1.5" />
+							{:else}
+								<line x1="1.5" y1="1.5" x2="11.5" y2="11.5" />
+								<path d="M4.8 3.4A5 5 0 0 1 6.5 2.5c3 0 5 4 5 4s-.6 1.2-1.7 2.2" />
+								<path d="M3 4.8A5.1 5.1 0 0 0 1.5 6.5s2 4 5 4c.9 0 1.8-.3 2.6-.8" />
+							{/if}
+						</svg>
+					</button>
+				{/if}
 			</div>
 
 			<!-- Editor area — switches between Character panel, Scene editor, and Fountain editor -->
 			{#if characterMode}
-				<div class="flex flex-1 gap-3 p-3 min-h-0">
+				<div class="flex flex-1 gap-3 p-3 min-h-0 flex-col md:flex-row">
 					<div class="flex flex-1 flex-col overflow-hidden rounded-sm min-h-0" style="background: var(--bg-front); border: 1.5px solid var(--border-base);">
 						<CharacterPanel {story} selectedSceneId={$page.params.id ? selectedSceneId : null} onchange={debouncedPersist} />
 					</div>
 					{#if previewMode === 'outline'}
-						<div class="flex flex-1 flex-col overflow-hidden rounded-sm min-h-0" style="background: var(--bg-front); border: 1.5px solid var(--border-base);">
-							<div class="border-b px-3 py-1.5" style="border-color: var(--border-base); background: var(--bg-base);">
-								<span class="font-mono-ui text-xs" style="text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted);">Outline</span>
-							</div>
-							<div class="flex-1 overflow-y-auto min-h-0 h-0 p-4">
-								<div class="space-y-4 text-sm">
-									{#each story.acts as act}
-										<div>
-											<p class="mb-2 font-bold" style="color: var(--text-strong); text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.7rem;">
-												{act.title}
-											</p>
-											{#if act.scenes.length === 0}
-												<p class="text-xs" style="color: var(--text-dim);">No scenes yet</p>
-											{:else}
-												<div class="space-y-2">
-													{#each act.scenes as sc (sc.id)}
-														<div class="border-l-2 pl-3" style="border-color: var(--border-base);">
-															<p class="text-xs font-semibold" style="color: var(--text-strong);">
-																Scene {sc.order + 1}{sc.title ? ` — ${sc.title}` : ''}
-															</p>
-															{#if sc.summary}
-																<p class="mt-0.5 text-xs leading-relaxed" style="color: var(--text-muted);">
-																	{sc.summary}
-																</p>
-															{/if}
-														</div>
-													{/each}
-												</div>
-											{/if}
-										</div>
-									{/each}
-								</div>
-							</div>
-						</div>
+						<OutlinePreview {story} containerClass="w-full md:w-auto" />
 					{/if}
 					{#if previewMode === 'characters'}
-						<div class="flex flex-1 flex-col overflow-hidden rounded-sm min-h-0" style="background: var(--bg-front); border: 1.5px solid var(--border-base);">
-							<div class="border-b px-3 py-1.5" style="border-color: var(--border-base); background: var(--bg-base);">
-								<span class="font-mono-ui text-xs" style="text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted);">Characters</span>
-							</div>
-							<div class="flex-1 overflow-y-auto min-h-0 h-0 p-4">
-								{#if story.characters.length === 0}
-									<p class="text-xs" style="color: var(--text-dim);">No characters yet</p>
-								{:else}
-									<div class="space-y-3">
-										{#each story.characters as char (char.id)}
-											<div class="border-l-2 pl-3" style="border-color: var(--border-base);">
-												<div class="flex items-center gap-2">
-													<span class="text-xs font-semibold" style="color: var(--text-strong);">{char.name || 'Unnamed'}</span>
-													{#if char.role}
-														<span
-															class="inline-block rounded-full px-2 py-0.5 text-[0.6rem] font-semibold"
-															style="background: {char.role === 'protagonist' ? 'oklch(0.42 0.18 260 / 0.12)' : char.role === 'antagonist' ? 'oklch(0.62 0.14 30 / 0.12)' : char.role === 'supporting' ? 'oklch(0.50 0.16 250 / 0.10)' : 'var(--ghost-hover)'}; color: {char.role === 'protagonist' ? 'var(--primary)' : char.role === 'antagonist' ? 'var(--warm)' : char.role === 'supporting' ? '#2563eb' : 'var(--text-dim)'};"
-														>{char.role}</span>
-													{/if}
-												</div>
-												{#if char.description}
-													<p class="mt-1 text-xs leading-relaxed" style="color: var(--text-muted);">{char.description}</p>
-												{/if}
-												{#if char.arc}
-													<p class="mt-0.5 text-xs italic" style="color: var(--text-dim);">Arc: {char.arc}</p>
-												{/if}
-											</div>
-										{/each}
-									</div>
-								{/if}
-							</div>
-						</div>
+						<CharactersPreview {story} containerClass="w-full md:w-auto" />
 					{/if}
 				</div>
 			{:else if screenplayMode}
 				<!-- Fountain Screenplay Editor + Preview / Outline / Characters -->
 				{#if screenplay}
-					<div class="flex flex-1 gap-3 p-3 min-h-0">
+					<div class="flex flex-1 gap-3 p-3 min-h-0 flex-col md:flex-row">
 						<!-- Fountain source editor — 40% (50% when preview is closed) -->
 						<div
 							class="flex flex-col overflow-hidden rounded-sm min-h-0"
@@ -846,91 +840,35 @@
 							style="background: var(--bg-front); border: 1.5px solid var(--border-base); {previewMode === 'closed' ? 'width: 100%;' : ''}"
 						>
 							{#if FountainEditor}
-								<svelte:component this={FountainEditor} content={screenplay.content} onUpdate={handleScreenplayUpdate} />
+								<FountainEditor content={screenplay.content} onUpdate={handleScreenplayUpdate} />
 							{/if}
 						</div>
 
 						<!-- Right panel: Fountain preview (closed) / Outline / Characters -->
 						{#if previewMode === 'closed'}
-							<!-- Fountain formatted preview — 60% -->
-							<div class="flex flex-[3] flex-col overflow-hidden rounded-sm" style="background: #fff; border: 1.5px solid var(--border-base);">
-								<div class="border-b px-3 py-1.5" style="border-color: var(--border-base); background: var(--bg-base);">
+							<!-- Fountain formatted preview — 60% (hidden on mobile unless toggled) -->
+							{#if previewVisible}
+							<div class="flex flex-[3] flex-col overflow-hidden rounded-sm" style="background: var(--bg-front); border: 1.5px solid var(--border-base);">
+								<div class="border-b px-3 py-1.5 flex items-center justify-between" style="border-color: var(--border-base); background: var(--bg-base);">
 									<span class="text-xs font-semibold" style="color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">Preview</span>
+									<button
+										onclick={() => (previewVisible = false)}
+										class="text-xs px-1.5 py-0.5 rounded-sm md:hidden"
+										style="color: var(--text-dim); border: 1px solid var(--border-base);"
+										aria-label="Hide preview"
+									>Hide</button>
 								</div>
 								<div class="flex-1 overflow-y-auto min-h-0 h-0">
-									{#if FountainPreview}
-										<svelte:component this={FountainPreview} content={screenplay.content} />
-									{/if}
+								{#if FountainPreview}
+									<FountainPreview content={screenplay.content} />
+								{/if}
 								</div>
 							</div>
+							{/if}
 						{:else if previewMode === 'outline'}
-							<div class="flex flex-[3] flex-col overflow-hidden rounded-sm min-h-0" style="background: var(--bg-front); border: 1.5px solid var(--border-base);">
-								<div class="border-b px-3 py-1.5" style="border-color: var(--border-base); background: var(--bg-base);">
-									<span class="font-mono-ui text-xs" style="text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted);">Outline</span>
-								</div>
-								<div class="flex-1 overflow-y-auto min-h-0 h-0 p-4">
-									<div class="space-y-4 text-sm">
-										{#each story.acts as act}
-											<div>
-												<p class="mb-2 font-bold" style="color: var(--text-strong); text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.7rem;">
-													{act.title}
-												</p>
-												{#if act.scenes.length === 0}
-													<p class="text-xs" style="color: var(--text-dim);">No scenes yet</p>
-												{:else}
-													<div class="space-y-2">
-														{#each act.scenes as sc (sc.id)}
-															<div class="border-l-2 pl-3" style="border-color: var(--border-base);">
-																<p class="text-xs font-semibold" style="color: var(--text-strong);">
-																	Scene {sc.order + 1}{sc.title ? ` — ${sc.title}` : ''}
-																</p>
-																{#if sc.summary}
-																	<p class="mt-0.5 text-xs leading-relaxed" style="color: var(--text-muted);">
-																		{sc.summary}
-																	</p>
-																{/if}
-															</div>
-														{/each}
-													</div>
-												{/if}
-											</div>
-										{/each}
-									</div>
-								</div>
-							</div>
+							<OutlinePreview {story} containerClass="flex-[3] w-full md:w-auto" />
 						{:else if previewMode === 'characters'}
-							<div class="flex flex-[3] flex-col overflow-hidden rounded-sm min-h-0" style="background: var(--bg-front); border: 1.5px solid var(--border-base);">
-								<div class="border-b px-3 py-1.5" style="border-color: var(--border-base); background: var(--bg-base);">
-									<span class="font-mono-ui text-xs" style="text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted);">Characters</span>
-								</div>
-								<div class="flex-1 overflow-y-auto min-h-0 h-0 p-4">
-									{#if story.characters.length === 0}
-										<p class="text-xs" style="color: var(--text-dim);">No characters yet</p>
-									{:else}
-										<div class="space-y-3">
-											{#each story.characters as char (char.id)}
-												<div class="border-l-2 pl-3" style="border-color: var(--border-base);">
-													<div class="flex items-center gap-2">
-														<span class="text-xs font-semibold" style="color: var(--text-strong);">{char.name || 'Unnamed'}</span>
-														{#if char.role}
-															<span
-																class="inline-block rounded-full px-2 py-0.5 text-[0.6rem] font-semibold"
-																style="background: {char.role === 'protagonist' ? 'oklch(0.42 0.18 260 / 0.12)' : char.role === 'antagonist' ? 'oklch(0.62 0.14 30 / 0.12)' : 'var(--ghost-hover)'}; color: {char.role === 'protagonist' ? 'var(--primary)' : char.role === 'antagonist' ? 'var(--warm)' : 'var(--text-dim)'};"
-															>{char.role}</span>
-														{/if}
-													</div>
-													{#if char.description}
-														<p class="mt-1 text-xs leading-relaxed" style="color: var(--text-muted);">{char.description}</p>
-													{/if}
-													{#if char.arc}
-														<p class="mt-0.5 text-xs italic" style="color: var(--text-dim);">Arc: {char.arc}</p>
-													{/if}
-												</div>
-											{/each}
-										</div>
-									{/if}
-								</div>
-							</div>
+							<CharactersPreview {story} containerClass="flex-[3] w-full md:w-auto" />
 						{/if}
 					</div>
 				{:else}
@@ -942,7 +880,7 @@
 				{/if}
 			{:else if selectedScene()}
 				{@const scene = selectedScene()!}
-				<div class="flex flex-1 gap-3 p-3 min-h-0">
+				<div class="flex flex-1 gap-3 p-3 min-h-0 flex-col md:flex-row">
 					<!-- Editor panel -->
 					<div
 						class="flex flex-col overflow-hidden rounded-sm min-h-0 transition-all duration-200"
@@ -962,83 +900,19 @@
 
 					<!-- Preview panel — story outline -->
 					{#if previewMode === 'outline'}
-						<div class="flex flex-1 flex-col overflow-hidden rounded-sm min-h-0 transition-all duration-200" style="background: var(--bg-front); border: 1.5px solid var(--border-base);">
-							<div class="border-b px-3 py-1.5" style="border-color: var(--border-base); background: var(--bg-base);">
-								<span class="font-mono-ui text-xs" style="text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted);">Outline</span>
-							</div>
-							<div class="flex-1 overflow-y-auto min-h-0 h-0 p-4">
-								<div class="space-y-4 text-sm">
-									{#each story.acts as act}
-										<div>
-											<p class="mb-2 font-bold" style="color: var(--text-strong); text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.7rem;">
-												{act.title}
-                         </p>
-											{#if act.scenes.length === 0}
-												<p class="text-xs" style="color: var(--text-dim);">No scenes yet</p>
-											{:else}
-												<div class="space-y-2">
-													{#each act.scenes as sc (sc.id)}
-														<div class="border-l-2 pl-3" style="border-color: var(--border-base);">
-															<p class="text-xs font-semibold" style="color: var(--text-strong);">
-																Scene {sc.order + 1}{sc.title ? ` — ${sc.title}` : ''}
-															</p>
-															{#if sc.summary}
-																<p class="mt-0.5 text-xs leading-relaxed" style="color: var(--text-muted);">
-																	{sc.summary}
-																</p>
-															{/if}
-														</div>
-													{/each}
-												</div>
-											{/if}
-										</div>
-									{/each}
-								</div>
-							</div>
-						</div>
+						<OutlinePreview {story} containerClass="flex-1 transition-all duration-200 w-full md:w-auto" />
 					{/if}
 
 					<!-- Preview panel — character overview -->
 					{#if previewMode === 'characters'}
-						<div class="flex flex-1 flex-col overflow-hidden rounded-sm min-h-0 transition-all duration-200" style="background: var(--bg-front); border: 1.5px solid var(--border-base);">
-							<div class="border-b px-3 py-1.5" style="border-color: var(--border-base); background: var(--bg-base);">
-								<span class="font-mono-ui text-xs" style="text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted);">Characters</span>
-							</div>
-							<div class="flex-1 overflow-y-auto min-h-0 h-0 p-4">
-								{#if story.characters.length === 0}
-									<p class="text-xs" style="color: var(--text-dim);">No characters yet</p>
-								{:else}
-									<div class="space-y-3">
-										{#each story.characters as char (char.id)}
-											<div class="border-l-2 pl-3" style="border-color: var(--border-base);">
-												<div class="flex items-center gap-2">
-													<span class="text-xs font-semibold" style="color: var(--text-strong);">{char.name || 'Unnamed'}</span>
-													{#if char.role}
-														<span
-															class="inline-block rounded-full px-2 py-0.5 text-[0.6rem] font-semibold"
-															style="background: {char.role === 'protagonist' ? 'oklch(0.42 0.18 260 / 0.12)' : char.role === 'antagonist' ? 'oklch(0.62 0.14 30 / 0.12)' : 'var(--ghost-hover)'}; color: {char.role === 'protagonist' ? 'var(--primary)' : char.role === 'antagonist' ? 'var(--warm)' : 'var(--text-dim)'};"
-														>{char.role}</span>
-													{/if}
-												</div>
-												{#if char.description}
-													<p class="mt-1 text-xs leading-relaxed" style="color: var(--text-muted);">{char.description}</p>
-												{/if}
-												{#if char.arc}
-													<p class="mt-0.5 text-xs italic" style="color: var(--text-dim);">Arc: {char.arc}</p>
-												{/if}
-											</div>
-										{/each}
-									</div>
-								{/if}
-							</div>
-						</div>
+						<CharactersPreview {story} containerClass="flex-1 transition-all duration-200 w-full md:w-auto" />
 					{/if}
 				</div>
 
 				{#if exportError}
-					<div class="flex items-center justify-between border-b px-4 py-2 text-xs" style="background: #fff0f0; color: #c00; border-color: #fcc;" role="alert">
+					<div class="flex items-center justify-between border-b px-4 py-2 text-xs" style="background: oklch(from var(--warm) l c h / 0.12); color: var(--warm); border-color: oklch(from var(--warm) l c h / 0.22);" role="alert">
 						<span>{exportError}</span>
-						<button onclick={() => (exportError = null)} class="ml-3 font-bold leading-none" style="color: #c00; font-size: 1.1rem;">&times;</button>
+						<button onclick={() => (exportError = null)} class="ml-3 font-bold leading-none" style="color: var(--warm); font-size: 1.1rem;">&times;</button>
 					</div>
 				{/if}
 			{:else}

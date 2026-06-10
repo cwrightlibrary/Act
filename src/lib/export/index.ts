@@ -118,7 +118,7 @@ const PAGE_H = 11;
 const MARGIN = 1;     // page margin for story/outline PDFs
 const CONTENT_W = PAGE_W - MARGIN * 2; // 6.5 in
 
-function addWrappedText(doc: jsPDF, text: string, x: number, y: number, maxW: number, opts?: { fontSize?: number; fontStyle?: 'normal' | 'italic'; align?: 'left' | 'center' | 'right' }): number {
+function addWrappedText(doc: jsPDF, text: string, x: number, y: number, maxW: number, opts?: { fontSize?: number; fontStyle?: 'normal' | 'italic' | 'bold'; align?: 'left' | 'center' | 'right' }): number {
 	const size = opts?.fontSize || 12;
 	const style = opts?.fontStyle || 'normal';
 	const align = opts?.align || 'left';

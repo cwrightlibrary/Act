@@ -214,6 +214,19 @@
 			highlightEl.scrollLeft = textareaEl.scrollLeft;
 		}
 	}
+
+	// ── Escape key closes help panel ──
+	$effect(() => {
+		if (!helpOpen) return;
+		function handleKeydown(e: KeyboardEvent) {
+			if (e.key === 'Escape') {
+				helpOpen = false;
+				e.preventDefault();
+			}
+		}
+		window.addEventListener('keydown', handleKeydown);
+		return () => window.removeEventListener('keydown', handleKeydown);
+	});
 </script>
 
 <div class="fountain-editor">
