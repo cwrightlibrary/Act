@@ -65,7 +65,6 @@
 						</svg>
 					</div>
 					<p class="mt-3 text-sm font-semibold" style="color: var(--text-muted);">No stories yet</p>
-					<p class="mt-1 text-xs" style="color: var(--text-dim);">Create your first three-act story</p>
 					<button
 						onclick={handleNewStory}
 						class="sidebar-action-btn mt-4 rounded-sm px-4 py-2 text-sm"
