@@ -2,6 +2,7 @@
 	import { getAllStories, saveStory, deleteStory, getAllScreenplays } from '$lib/persistence/db';
 	import { createStory, type Story, type Screenplay } from '$lib/domain/story';
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 
 	let stories = $state<Story[]>([]);
 	let loading = $state(true);
@@ -17,8 +18,7 @@
 	async function handleNewStory() {
 		const story = createStory();
 		await saveStory(story);
-		stories = await getAllStories();
-		window.location.href = `/story/${story.id}`;
+		await goto(`/story/${story.id}`);
 	}
 
 	async function handleDelete(id: string, e: MouseEvent) {
