@@ -12,80 +12,80 @@ Three color modes are available via `data-theme` attribute on `<html>` (light, d
 
 ### Light mode
 
-| Token | Value | Usage |
-|---|---|---|
-| `--bg-back` | `oklch(0.91 0.015 285)` | Page background with dot-grid pattern |
-| `--bg-base` | `oklch(0.965 0.01 285)` | Section / main canvas |
-| `--bg-front` | `oklch(1 0 0)` | Cards, panels, elevated surfaces |
-| `--text-strong` | `oklch(0.15 0.015 280)` | Primary content headings |
-| `--text-base` | `oklch(0.25 0.02 280)` | Body text |
-| `--text-muted` | `oklch(0.40 0.03 280)` | Secondary text, labels |
-| `--text-dim` | `oklch(0.52 0.025 280)` | Placeholder, disabled |
-| `--border-base` | `oklch(0.75 0.035 285)` | Subtle borders, dividers |
-| `--border-strong` | `oklch(0.65 0.04 285)` | Emphasized borders (header, sidebar) |
-| `--primary` | `oklch(0.42 0.18 260)` | Links, active states, primary buttons — darker blue |
-| `--primary-hover` | `oklch(0.38 0.18 260)` | Primary hover |
-| `--secondary` | `oklch(0.60 0.18 40)` | Secondary action buttons — warm amber |
-| `--secondary-hover` | `oklch(0.56 0.18 40)` | Secondary hover |
-| `--accent` | `oklch(0.50 0.16 250)` | Key highlights, badges |
-| `--accent-hover` | `oklch(0.46 0.16 250)` | Accent hover |
-| `--warm` | `oklch(0.62 0.14 30)` | Warm coral accent |
-| `--focus-ring` | `oklch(0.42 0.18 260 / 0.35)` | Keyboard focus outlines |
-| `--control-bg` | `oklch(0.42 0.18 260)` | Button/control filled background |
-| `--control-text` | `oklch(0.95 0.01 280)` | Text on filled controls |
+| Token               | Value                         | Usage                                               |
+| ------------------- | ----------------------------- | --------------------------------------------------- |
+| `--bg-back`         | `oklch(0.91 0.015 285)`       | Page background with dot-grid pattern               |
+| `--bg-base`         | `oklch(0.965 0.01 285)`       | Section / main canvas                               |
+| `--bg-front`        | `oklch(1 0 0)`                | Cards, panels, elevated surfaces                    |
+| `--text-strong`     | `oklch(0.15 0.015 280)`       | Primary content headings                            |
+| `--text-base`       | `oklch(0.25 0.02 280)`        | Body text                                           |
+| `--text-muted`      | `oklch(0.40 0.03 280)`        | Secondary text, labels                              |
+| `--text-dim`        | `oklch(0.52 0.025 280)`       | Placeholder, disabled                               |
+| `--border-base`     | `oklch(0.75 0.035 285)`       | Subtle borders, dividers                            |
+| `--border-strong`   | `oklch(0.65 0.04 285)`        | Emphasized borders (header, sidebar)                |
+| `--primary`         | `oklch(0.42 0.18 260)`        | Links, active states, primary buttons — darker blue |
+| `--primary-hover`   | `oklch(0.38 0.18 260)`        | Primary hover                                       |
+| `--secondary`       | `oklch(0.60 0.18 40)`         | Secondary action buttons — warm amber               |
+| `--secondary-hover` | `oklch(0.56 0.18 40)`         | Secondary hover                                     |
+| `--accent`          | `oklch(0.50 0.16 250)`        | Key highlights, badges                              |
+| `--accent-hover`    | `oklch(0.46 0.16 250)`        | Accent hover                                        |
+| `--warm`            | `oklch(0.62 0.14 30)`         | Warm coral accent                                   |
+| `--focus-ring`      | `oklch(0.42 0.18 260 / 0.35)` | Keyboard focus outlines                             |
+| `--control-bg`      | `oklch(0.42 0.18 260)`        | Button/control filled background                    |
+| `--control-text`    | `oklch(0.95 0.01 280)`        | Text on filled controls                             |
 
 ### Dark mode (brightened)
 
-| Token | Value | Usage |
-|---|---|---|
-| `--bg-back` | `oklch(0.10 0.012 285)` | Page background |
-| `--bg-base` | `oklch(0.14 0.015 285)` | Section / main canvas |
-| `--bg-front` | `oklch(0.20 0.018 285)` | Cards, panels, elevated surfaces |
-| `--text-strong` | `oklch(0.93 0.008 280)` | Primary content |
-| `--text-base` | `oklch(0.82 0.012 280)` | Body text |
-| `--text-muted` | `oklch(0.68 0.018 280)` | Secondary text |
-| `--text-dim` | `oklch(0.55 0.018 280)` | Placeholder, disabled |
-| `--border-base` | `oklch(0.32 0.025 285)` | Subtle borders, dividers |
-| `--border-strong` | `oklch(0.42 0.03 285)` | Emphasized borders |
-| `--primary` | `oklch(0.60 0.15 260)` | Links, active states, primary buttons |
-| `--primary-hover` | `oklch(0.66 0.15 260)` | Primary hover |
-| `--secondary` | `oklch(0.72 0.16 40)` | Secondary action buttons |
-| `--secondary-hover` | `oklch(0.78 0.16 40)` | Secondary hover |
+| Token               | Value                   | Usage                                 |
+| ------------------- | ----------------------- | ------------------------------------- |
+| `--bg-back`         | `oklch(0.10 0.012 285)` | Page background                       |
+| `--bg-base`         | `oklch(0.14 0.015 285)` | Section / main canvas                 |
+| `--bg-front`        | `oklch(0.20 0.018 285)` | Cards, panels, elevated surfaces      |
+| `--text-strong`     | `oklch(0.93 0.008 280)` | Primary content                       |
+| `--text-base`       | `oklch(0.82 0.012 280)` | Body text                             |
+| `--text-muted`      | `oklch(0.68 0.018 280)` | Secondary text                        |
+| `--text-dim`        | `oklch(0.55 0.018 280)` | Placeholder, disabled                 |
+| `--border-base`     | `oklch(0.32 0.025 285)` | Subtle borders, dividers              |
+| `--border-strong`   | `oklch(0.42 0.03 285)`  | Emphasized borders                    |
+| `--primary`         | `oklch(0.60 0.15 260)`  | Links, active states, primary buttons |
+| `--primary-hover`   | `oklch(0.66 0.15 260)`  | Primary hover                         |
+| `--secondary`       | `oklch(0.72 0.16 40)`   | Secondary action buttons              |
+| `--secondary-hover` | `oklch(0.78 0.16 40)`   | Secondary hover                       |
 
 ### OLED dark mode
 
-| Token | Value | Usage |
-|---|---|---|
-| `--bg-back` | `oklch(0 0 0)` | Page background — pure black |
-| `--bg-base` | `oklch(0.03 0.008 280)` | Section / main canvas |
-| `--bg-front` | `oklch(0.06 0.01 280)` | Cards, panels, elevated surfaces |
-| `--text-strong` | `oklch(0.95 0.008 280)` | Primary content |
-| `--text-base` | `oklch(0.85 0.01 280)` | Body text |
-| `--text-muted` | `oklch(0.70 0.015 280)` | Secondary text |
-| `--text-dim` | `oklch(0.55 0.015 280)` | Placeholder, disabled |
-| `--border-base` | `oklch(0.15 0.015 280)` | Subtle borders, dividers |
-| `--border-strong` | `oklch(0.22 0.02 280)` | Emphasized borders |
-| `--primary` | `oklch(0.62 0.16 260)` | Links, active states, primary buttons |
-| `--primary-hover` | `oklch(0.68 0.16 260)` | Primary hover |
-| `--secondary` | `oklch(0.74 0.16 40)` | Secondary action buttons |
-| `--secondary-hover` | `oklch(0.80 0.16 40)` | Secondary hover |
+| Token               | Value                   | Usage                                 |
+| ------------------- | ----------------------- | ------------------------------------- |
+| `--bg-back`         | `oklch(0 0 0)`          | Page background — pure black          |
+| `--bg-base`         | `oklch(0.03 0.008 280)` | Section / main canvas                 |
+| `--bg-front`        | `oklch(0.06 0.01 280)`  | Cards, panels, elevated surfaces      |
+| `--text-strong`     | `oklch(0.95 0.008 280)` | Primary content                       |
+| `--text-base`       | `oklch(0.85 0.01 280)`  | Body text                             |
+| `--text-muted`      | `oklch(0.70 0.015 280)` | Secondary text                        |
+| `--text-dim`        | `oklch(0.55 0.015 280)` | Placeholder, disabled                 |
+| `--border-base`     | `oklch(0.15 0.015 280)` | Subtle borders, dividers              |
+| `--border-strong`   | `oklch(0.22 0.02 280)`  | Emphasized borders                    |
+| `--primary`         | `oklch(0.62 0.16 260)`  | Links, active states, primary buttons |
+| `--primary-hover`   | `oklch(0.68 0.16 260)`  | Primary hover                         |
+| `--secondary`       | `oklch(0.74 0.16 40)`   | Secondary action buttons              |
+| `--secondary-hover` | `oklch(0.80 0.16 40)`   | Secondary hover                       |
 
 ### Syntax highlighting
 
 Bluloco-inspired tokens for editor content:
 
-| Role | Light | Dark |
-|---|---|---|
-| `--syntax-keyword` | `#0098dd` | `#10b1fe` |
-| `--syntax-function` | `#23974a` | `#3fc56b` |
-| `--syntax-string` | `#c5a332` | `#f9c859` |
-| `--syntax-number` | `#ce33c0` | `#ff78f8` |
-| `--syntax-constant` | `#823ff1` | `#9f7efe` |
-| `--syntax-tag` | `#275fe4` | `#3691ff` |
+| Role                 | Light     | Dark      |
+| -------------------- | --------- | --------- |
+| `--syntax-keyword`   | `#0098dd` | `#10b1fe` |
+| `--syntax-function`  | `#23974a` | `#3fc56b` |
+| `--syntax-string`    | `#c5a332` | `#f9c859` |
+| `--syntax-number`    | `#ce33c0` | `#ff78f8` |
+| `--syntax-constant`  | `#823ff1` | `#9f7efe` |
+| `--syntax-tag`       | `#275fe4` | `#3691ff` |
 | `--syntax-attribute` | `#df631c` | `#ff936a` |
-| `--syntax-type` | `#d52753` | `#ff6480` |
-| `--syntax-operator` | `#7a82da` | `#7a82da` |
-| `--syntax-comment` | `#a0a1a7` | `#636d83` |
+| `--syntax-type`      | `#d52753` | `#ff6480` |
+| `--syntax-operator`  | `#7a82da` | `#7a82da` |
+| `--syntax-comment`   | `#a0a1a7` | `#636d83` |
 
 ## Typography
 
@@ -95,8 +95,8 @@ Bluloco-inspired tokens for editor content:
 
 IBM Plex Sans is a warm, humanist sans-serif with distinctive character (open apertures, balanced proportions). No monospace used anywhere — a single typeface keeps the interface clean, approachable, and consistent.
 
-| Role | Family | Weight | Notes |
-|---|---|---|---|---|
+| Role       | Family            | Weight                | Notes                                                 |
+| ---------- | ----------------- | --------------------- | ----------------------------------------------------- |
 | **All UI** | `"IBM Plex Sans"` | 400 / 500 / 600 / 700 | Everything — body, headings, buttons, editor, labels. |
 
 ### Type scale (compact)
@@ -234,27 +234,27 @@ Action buttons (Add Scene, Add Act) use `.sidebar-action-btn`: similar ghost sty
 
 All motion uses `ease-out` curves. No spring, no bounce, no elastic.
 
-| Token | Value |
-|---|---|
-| `--ease-out` | `cubic-bezier(0.16, 1, 0.3, 1)` |
-| `--ease-out-fast` | `cubic-bezier(0.2, 0, 0, 1)` |
-| `--duration-instant` | `0ms` |
-| `--duration-fast` | `100ms` |
-| `--duration-normal` | `200ms` |
-| `--duration-slow` | `300ms` |
+| Token                | Value                           |
+| -------------------- | ------------------------------- |
+| `--ease-out`         | `cubic-bezier(0.16, 1, 0.3, 1)` |
+| `--ease-out-fast`    | `cubic-bezier(0.2, 0, 0, 1)`    |
+| `--duration-instant` | `0ms`                           |
+| `--duration-fast`    | `100ms`                         |
+| `--duration-normal`  | `200ms`                         |
+| `--duration-slow`    | `300ms`                         |
 
 ### Animation map
 
 | Element | Property | Duration | Easing |
-|---|---|---|---|---|
-| Scene card mount | opacity + translateY(8px) | 200ms | ease-out |
-| Act collapse/expand | opacity + max-height | 250ms | ease-out |
-| Drag handle lift | scale 1.02 + shadow | 100ms | ease-out |
-| Theme cycle | rotate + icon swap | 300ms | ease-out |
-| Sidebar toggle | translateX | 200ms | ease-out |
-| Button hover | translateY(-1px) + shadow | 120ms | ease-out-fast |
-| Button press | scale 0.97 | 80ms | ease-out-fast |
-| Focus ring | box-shadow | 150ms | ease-out |
+| ------- | -------- | -------- | ------ ||
+| Scene card mount    | opacity + translateY(8px) | 200ms    | ease-out      |
+| Act collapse/expand | opacity + max-height      | 250ms    | ease-out      |
+| Drag handle lift    | scale 1.02 + shadow       | 100ms    | ease-out      |
+| Theme cycle         | rotate + icon swap        | 300ms    | ease-out      |
+| Sidebar toggle      | translateX                | 200ms    | ease-out      |
+| Button hover        | translateY(-1px) + shadow | 120ms    | ease-out-fast |
+| Button press        | scale 0.97                | 80ms     | ease-out-fast |
+| Focus ring          | box-shadow                | 150ms    | ease-out      |
 
 ### Reduced motion
 
