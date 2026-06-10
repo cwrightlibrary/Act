@@ -6,6 +6,7 @@
 	} = $props();
 
 	let textareaEl = $state<HTMLTextAreaElement>();
+	let helpOpen = $state(false);
 
 	// ── Syntax highlighting ──
 	let highlightHtml = $derived(highlightFountain(content));
@@ -228,7 +229,29 @@
 		<span class="toolbar-sep"></span>
 		<button onclick={() => insertAround('Title: ', '\n')} class="toolbar-btn" aria-label="Insert title page title">TITLE</button>
 		<button onclick={() => insertAround('Author: ', '\n')} class="toolbar-btn" aria-label="Insert title page author">AUTHOR</button>
+		<span class="toolbar-sep"></span>
+		<button onclick={() => (helpOpen = !helpOpen)} class="toolbar-btn" aria-label="Toggle Fountain syntax help">?</button>
 	</div>
+
+	<!-- Fountain syntax help panel -->
+	{#if helpOpen}
+		<div class="help-panel">
+			<div class="help-grid">
+				<div class="help-item"><code class="help-code">INT. LOCATION - DAY</code><span class="help-desc">Scene heading</span></div>
+				<div class="help-item"><code class="help-code">.FORCED HEADING</code><span class="help-desc">Forced scene heading</span></div>
+				<div class="help-item"><code class="help-code">CHARACTER NAME</code><span class="help-desc">Character (ALL CAPS, after blank line)</span></div>
+				<div class="help-item"><code class="help-code">&lt;tab&gt;Dialogue text</code><span class="help-desc">Dialogue (indented)</span></div>
+				<div class="help-item"><code class="help-code">(beat)</code><span class="help-desc">Parenthetical</span></div>
+				<div class="help-item"><code class="help-code">&gt; CUT TO:</code><span class="help-desc">Transition</span></div>
+				<div class="help-item"><code class="help-code">===</code><span class="help-desc">Page break</span></div>
+				<div class="help-item"><code class="help-code">&gt;Center this&lt;</code><span class="help-desc">Centered text</span></div>
+				<div class="help-item"><code class="help-code">~La la la...</code><span class="help-desc">Lyrics</span></div>
+				<div class="help-item"><code class="help-code">/* boneyard */</code><span class="help-desc">Comment (not rendered)</span></div>
+				<div class="help-item"><code class="help-code">Title: My Story</code><span class="help-desc">Title page key</span></div>
+				<div class="help-item"><code class="help-code">Author: Name</code><span class="help-desc">Title page author</span></div>
+			</div>
+		</div>
+	{/if}
 
 	<!-- Editor body — textarea + highlight overlay -->
 	<div class="editor-body">
@@ -350,6 +373,34 @@
 	:global([data-theme="oled"]) :global(.sp-parenthetical)  { color: #fbbf24; }
 	:global([data-theme="oled"]) :global(.sp-transition)     { color: #c084fc; }
 	:global([data-theme="oled"]) :global(.sp-page-break)     { color: #f87171; }
+
+	/* ── Syntax help panel ── */
+	.help-panel {
+		border-bottom: 1px solid var(--border-base);
+		padding: 0.5rem 0.75rem;
+		background: var(--bg-base);
+	}
+	.help-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.25rem 1rem;
+	}
+	.help-item {
+		display: flex;
+		align-items: baseline;
+		gap: 0.5rem;
+		font-size: 0.7rem;
+		line-height: 1.6;
+	}
+	.help-code {
+		font-family: 'Courier Prime', 'Courier New', Courier, monospace;
+		font-size: 0.7rem;
+		color: var(--text-strong);
+		flex-shrink: 0;
+	}
+	.help-desc {
+		color: var(--text-muted);
+	}
 
 	/* ── Footer ── */
 	.footer-stats {

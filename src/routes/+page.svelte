@@ -3,10 +3,14 @@
 	import { createStory, type Story, type Screenplay } from '$lib/domain/story';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { importActFile, ActImportError } from '$lib/import';
 
 	let stories = $state<Story[]>([]);
 	let loading = $state(true);
 	let screenplayIds = $state<Set<string>>(new Set());
+	let importError = $state<string | null>(null);
+	let importing = $state(false);
+	let fileInputEl: HTMLInputElement | undefined = $state();
 
 	onMount(async () => {
 		stories = await getAllStories();
@@ -27,6 +31,33 @@
 		await deleteStory(id);
 		stories = await getAllStories();
 	}
+
+	async function handleImportFile(e: Event) {
+		const input = e.target as HTMLInputElement;
+		const file = input.files?.[0];
+		if (!file) return;
+
+		importError = null;
+		importing = true;
+		try {
+			const newId = await importActFile(file);
+			await goto(`/story/${newId}`);
+		} catch (err) {
+			if (err instanceof ActImportError) {
+				importError = err.message;
+			} else {
+				importError = 'Import failed. Please check the file and try again.';
+				console.error(err);
+			}
+		} finally {
+			importing = false;
+			input.value = ''; // reset so the same file can be re-selected
+		}
+	}
+
+	function triggerImport() {
+		fileInputEl?.click();
+	}
 </script>
 
 <div class="mx-auto max-w-4xl px-6 py-8">
@@ -35,13 +66,37 @@
 		<!-- Section header — with stronger border-b -->
 		<div class="flex items-center justify-between border-b px-5 py-3" style="border-color: var(--border-strong); background: var(--bg-front);">
 			<h1 style="color: var(--text-strong);">My Stories</h1>
-			<button
-				onclick={handleNewStory}
-				class="sidebar-action-btn rounded-sm px-3 py-1.5 text-sm"
-			>
-				New Story
-			</button>
+			<div class="flex items-center gap-2">
+				<input
+					type="file"
+					accept=".act"
+					onchange={handleImportFile}
+					bind:this={fileInputEl}
+					class="hidden"
+					aria-hidden="true"
+				/>
+				<button
+					onclick={triggerImport}
+					disabled={importing}
+					class="sidebar-action-btn rounded-sm px-3 py-1.5 text-sm"
+				>
+					{importing ? 'Importing…' : 'Import'}
+				</button>
+				<button
+					onclick={handleNewStory}
+					class="sidebar-action-btn rounded-sm px-3 py-1.5 text-sm"
+				>
+					New Story
+				</button>
+			</div>
 		</div>
+
+		{#if importError}
+			<div class="flex items-center justify-between border-b px-5 py-2 text-xs" style="background: #fff0f0; color: #c00; border-color: #fcc;" role="alert">
+				<span>{importError}</span>
+				<button onclick={() => (importError = null)} class="ml-3 font-bold leading-none" style="color: #c00; font-size: 1.1rem;">&times;</button>
+			</div>
+		{/if}
 
 		<!-- Content area -->
 		<div class="px-5 py-4">

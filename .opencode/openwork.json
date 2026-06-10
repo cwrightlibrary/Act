@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "workspace": {
+    "name": "Act",
+    "createdAt": 1781125208705,
+    "preset": "starter"
+  },
+  "authorizedRoots": [
+    "/Users/christopherwright/GitHub Repositories/Act"
+  ],
+  "reload": null
+}

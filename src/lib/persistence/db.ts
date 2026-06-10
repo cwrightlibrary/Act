@@ -33,6 +33,7 @@ export function saveStory(story: Story): Promise<string> {
 }
 
 export function deleteStory(id: string): Promise<void> {
+	db.screenplays.where('storyId').equals(id).delete();
 	return db.stories.delete(id);
 }
 

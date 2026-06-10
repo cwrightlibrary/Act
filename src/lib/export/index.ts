@@ -1,7 +1,7 @@
 import TurndownService from 'turndown';
 import { jsPDF } from 'jspdf';
 import { Fountain } from 'fountain-js';
-import type { Story } from '$lib/domain/story';
+import type { Story, Screenplay } from '$lib/domain/story';
 
 const turndown = new TurndownService({
 	headingStyle: 'atx',
@@ -391,4 +391,24 @@ ${contentHtml}
 		printWindow.focus();
 		printWindow.print();
 	}, 2000);
+}
+
+// ── .act export ──
+
+export interface ActExportData {
+	format: 'act';
+	version: 1;
+	story: Story;
+	screenplay: Screenplay | null;
+}
+
+export function exportActFile(story: Story, screenplay: Screenplay | null) {
+	const data: ActExportData = {
+		format: 'act',
+		version: 1,
+		story,
+		screenplay,
+	};
+	const json = JSON.stringify(data, null, 2);
+	downloadFile(json, `${slugify(story.title)}.act`, 'application/json');
 }
