@@ -9,29 +9,53 @@ A modern, **local-first** writing app for screenwriters and storytellers. Build 
 
 ## Features
 
-📐 **Story Templates** — Start with a blank slate or one of six built-in story structures: Three-Act, Hero's Journey, Save the Cat, Freytag's Pyramid, 7-Point, or blank. Each comes with pre-written scene titles and summaries to scaffold your outline.
+### 📐 Story Templates
 
-👤 **Character Management** — Add characters with names, descriptions, and role badges (protagonist, antagonist, supporting). Scene assignments show as color-coded dots in the sidebar. Characters mode gives you a dedicated overview panel.
+Start with a blank slate or one of six built-in story structures: Three-Act, Hero's Journey, Save the Cat, Freytag's Pyramid, 7-Point, or blank. Each comes with pre-written scene titles and summaries to scaffold your outline.
 
-✍️ **Three-Editor Modes** — Switch between **Scenes** (rich-text per scene), **Screenplay** (Fountain plain-text with syntax highlighting), and **Characters** (inline-editable cards). Use the toolbar or `Cmd+K` / `Ctrl+K` to cycle.
+### 👤 Character Management
 
-📄 **Live Fountain Preview** — Write in industry-standard Fountain format and see it rendered as a proper screenplay in real-time. An inline help panel covers all 12 rules.
+Add characters with names, descriptions, and role badges (protagonist, antagonist, supporting). Scene assignments show as color-coded dots in the sidebar. Characters mode gives you a dedicated overview panel.
 
-📊 **Outline & Character Previews** — Cycle the right panel through **closed**, **outline** (condensed act/scene summary), and **characters** (all characters at a glance) with a single toggle.
+### ✍️ Three-Editor Modes
 
-🔄 **Drag & Drop Reordering** — Drag scenes within an act or across acts to restructure your story. Visual drop indicators show exactly where a scene will land.
+Switch between **Scenes** (rich-text per scene), **Screenplay** (Fountain plain-text with syntax highlighting), and **Characters** (inline-editable cards). Use the toolbar or `Cmd+K` / `Ctrl+K` to cycle.
 
-↔️ **Resizable Panels** — Drag the handle between editor and preview to reclaim space. Works with mouse, touch, and keyboard (ArrowLeft / ArrowRight).
+### 📄 Live Fountain Preview
 
-📤 **Export & Import** — Export as **Markdown**, **PDF**, or **Fountain**. Import or export full stories as `.act` files — a portable JSON envelope that includes both the story structure and screenplay content, with automatic ID regeneration on import.
+Write in industry-standard Fountain format and see it rendered as a proper screenplay in real-time. An inline help panel covers all 12 rules.
 
-💾 **Local-First** — Everything lives in your browser via IndexedDB. No accounts, no servers, no syncing hassles. Your data stays yours.
+### 📊 Outline & Character Previews
 
-🎨 **Light, Dark & OLED Modes** — Three carefully crafted themes for any environment. Switches are instant.
+Cycle the right panel through **closed**, **outline** (condensed act/scene summary), and **characters** (all characters at a glance) with a single toggle.
 
-📱 **Mobile-Friendly** — Panels stack vertically on narrow screens, touch targets are 44px+ on coarse pointers, safe areas are respected, and the Fountain preview is toggleable to maximize editing space.
+### 🔄 Drag & Drop Reordering
 
-⚡ **Instant Responsiveness** — All saves, reorders, and mode switches happen in the same frame. No spinners, no waiting.
+Drag scenes within an act or across acts to restructure your story. Visual drop indicators show exactly where a scene will land.
+
+### ↔️ Resizable Panels
+
+Drag the handle between editor and preview to reclaim space. Works with mouse, touch, and keyboard (ArrowLeft / ArrowRight).
+
+### 📤 Export & Import
+
+Export as **Markdown**, **PDF**, or **Fountain**. Import or export full stories as `.act` files — a portable JSON envelope that includes both the story structure and screenplay content, with automatic ID regeneration on import.
+
+### 💾 Local-First
+
+Everything lives in your browser via IndexedDB. No accounts, no servers, no syncing hassles. Your data stays yours.
+
+### 🎨 Light, Dark & OLED Modes
+
+Three carefully crafted themes for any environment. Switches are instant.
+
+### 📱 Mobile-Friendly
+
+Panels stack vertically on narrow screens, touch targets are 44px+ on coarse pointers, safe areas are respected, and the Fountain preview is toggleable to maximize editing space.
+
+### ⚡ Instant Responsiveness
+
+All saves, reorders, and mode switches happen in the same frame. No spinners, no waiting.
 
 ## Screenshots
 
