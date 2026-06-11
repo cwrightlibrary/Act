@@ -4,6 +4,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { importActFile, ActImportError } from '$lib/import';
+	import TemplatePicker from '$lib/components/TemplatePicker.svelte';
 
 	let stories = $state<Story[]>([]);
 	let loading = $state(true);
@@ -11,6 +12,7 @@
 	let importError = $state<string | null>(null);
 	let importing = $state(false);
 	let fileInputEl: HTMLInputElement | undefined = $state();
+	let showTemplatePicker = $state(false);
 
 	onMount(async () => {
 		stories = await getAllStories();
@@ -19,10 +21,8 @@
 		loading = false;
 	});
 
-	async function handleNewStory() {
-		const story = createStory();
-		await saveStory(story);
-		await goto(`/story/${story.id}`);
+	function handleNewStory() {
+		showTemplatePicker = true;
 	}
 
 	async function handleDelete(id: string, e: MouseEvent) {
@@ -177,3 +177,5 @@
 		</div>
 	</div>
 </div>
+
+<TemplatePicker open={showTemplatePicker} onClose={() => (showTemplatePicker = false)} />

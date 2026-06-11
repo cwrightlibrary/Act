@@ -532,12 +532,19 @@
 		color: var(--text-muted);
 	}
 
-	/* ── Scene move arrows (↑/↓) — appear with delete button in .scene-actions ── */
+	/* ── Scene action buttons (↑/↓/×) — float over right side, don't push text ── */
 	.scene-actions {
+		position: absolute;
+		top: 8px;
+		right: 8px;
 		display: flex;
 		align-items: center;
 		gap: 1px;
 		flex-shrink: 0;
+	}
+
+	.scene-text-pad {
+		padding-right: 88px;
 	}
 
 	.scene-move-btn {
@@ -677,6 +684,53 @@
 		color: var(--text-strong);
 	}
 
+	/* ── Resizable split handle ── */
+	.resize-handle {
+		flex: none;
+		width: 6px;
+		cursor: col-resize;
+		align-items: center;
+		justify-content: center;
+		position: relative;
+		z-index: 10;
+		transition: background 0.12s ease-out;
+		margin: 0 -0.5px;
+		border-radius: 3px;
+		user-select: none;
+		-webkit-user-select: none;
+		touch-action: none;
+	}
+
+	.resize-handle:hover,
+	.resize-handle:active {
+		background: var(--border-base);
+	}
+
+	.resize-handle-dots {
+		width: 2px;
+		height: 20px;
+		border-radius: 1px;
+		background: var(--text-dim);
+		opacity: 0;
+		transition: opacity 0.12s ease-out;
+		box-shadow:
+			-4px 0 0 var(--text-dim),
+			4px 0 0 var(--text-dim);
+	}
+
+	.resize-handle:hover .resize-handle-dots,
+	.resize-handle:active .resize-handle-dots {
+		opacity: 0.5;
+	}
+
+	/* Dim adjacent panel borders at the split */
+	.resize-handle + .flex-1 > [class*="rounded-sm"],
+	.resize-handle + .flex-1 > [class*="rounded"],
+	.resize-handle + div > div[class*="rounded"] {
+		border-top-left-radius: 0 !important;
+		border-bottom-left-radius: 0 !important;
+	}
+
 	/* ── Touch-friendly sizing (coarse pointers) ── */
 	@media (pointer: coarse) {
 		.toolbar-btn {
@@ -709,6 +763,10 @@
 		.scene-move-btn {
 			width: 36px;
 			height: 36px;
+		}
+
+		.scene-text-pad {
+			padding-right: 114px;
 		}
 	}
 

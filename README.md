@@ -1,28 +1,47 @@
-# Act - Story Builder
+# Act — Story Builder
 
-A modern, **local-first** writing app for screenwriters and storytellers. Build your three-act structure with a clean, distraction-free editor. Write in Markdown, preview your screenplay, and export to PDF, Markdown, or Fountain format—all in your browser, all offline.
+[![Deploy to Cloudflare Pages](https://img.shields.io/badge/cloudflare-pages-orange)](https://act.pages.dev)
+[![Built with SvelteKit](https://img.shields.io/badge/svelte-kit-FF3E00?logo=svelte)](https://kit.svelte.dev)
 
-![Screenshot of the Act dashboard](screenshot.png)
+A modern, **local-first** writing app for screenwriters and storytellers. Build stories from templates or a blank page, manage characters and scenes, write in Fountain syntax, preview as a formatted screenplay — all in your browser, all offline.
 
 [Visit Act now.](https://act.cwright-293.workers.dev/)
 
 ## Features
 
-✨ **Three-Act Structure** — Organize your story with acts and scenes. The framework guides without constraining.
+📐 **Story Templates** — Start with a blank slate or one of six built-in story structures: Three-Act, Hero's Journey, Save the Cat, Freytag's Pyramid, 7-Point, or blank. Each comes with pre-written scene titles and summaries to scaffold your outline.
 
-✍️ **Rich Text Editor** — Write with bold, italic, underline, headings, and lists. Every keystroke saved instantly.
+👤 **Character Management** — Add characters with names, descriptions, and role badges (protagonist, antagonist, supporting). Scene assignments show as color-coded dots in the sidebar. Characters mode gives you a dedicated overview panel.
 
-👁️ **Live Screenplay Preview** — See your content rendered as a proper screenplay in real-time (Fountain format).
+✍️ **Three-Editor Modes** — Switch between **Scenes** (rich-text per scene), **Screenplay** (Fountain plain-text with syntax highlighting), and **Characters** (inline-editable cards). Use the toolbar or `Cmd+K` / `Ctrl+K` to cycle.
 
-📊 **Story Outline** — Quick visual summary of all acts and scenes with summaries.
+📄 **Live Fountain Preview** — Write in industry-standard Fountain format and see it rendered as a proper screenplay in real-time. An inline help panel covers all 12 rules.
 
-💾 **Local-First** — Everything lives in your browser via IndexedDB. No accounts, no servers, no syncing hassles.
+📊 **Outline & Character Previews** — Cycle the right panel through **closed**, **outline** (condensed act/scene summary), and **characters** (all characters at a glance) with a single toggle.
+
+🔄 **Drag & Drop Reordering** — Drag scenes within an act or across acts to restructure your story. Visual drop indicators show exactly where a scene will land.
+
+↔️ **Resizable Panels** — Drag the handle between editor and preview to reclaim space. Works with mouse, touch, and keyboard (ArrowLeft / ArrowRight).
+
+📤 **Export & Import** — Export as **Markdown**, **PDF**, or **Fountain**. Import or export full stories as `.act` files — a portable JSON envelope that includes both the story structure and screenplay content, with automatic ID regeneration on import.
+
+💾 **Local-First** — Everything lives in your browser via IndexedDB. No accounts, no servers, no syncing hassles. Your data stays yours.
 
 🎨 **Light, Dark & OLED Modes** — Three carefully crafted themes for any environment. Switches are instant.
 
-📤 **Export Options** — Save your work as Markdown, PDF, or Fountain (industry-standard screenplay format).
+📱 **Mobile-Friendly** — Panels stack vertically on narrow screens, touch targets are 44px+ on coarse pointers, safe areas are respected, and the Fountain preview is toggleable to maximize editing space.
 
-⚡ **Instant Responsiveness** — Every action completes in the same frame. No spinners, no waiting.
+⚡ **Instant Responsiveness** — All saves, reorders, and mode switches happen in the same frame. No spinners, no waiting.
+
+## Screenshots
+
+![Act dashboard](screenshots/dashboard.png)
+
+![New story dialog](screenshots/new-story.png)
+
+![Outline preview](screenshots/outline-preview.png)
+
+![Screenplay preview](screenshots/screenplay-preview.png)
 
 ## Getting Started
 
@@ -78,18 +97,29 @@ npm run cf-build
 ```
 act/
 ├── src/
-│   ├── routes/              # SvelteKit pages (dashboard, story editor)
+│   ├── routes/                # SvelteKit pages (dashboard, story editor)
 │   ├── lib/
-│   │   ├── components/      # Reusable UI components
-│   │   ├── domain/          # Core story logic
-│   │   ├── persistence/     # IndexedDB database layer
-│   │   └── stores/          # Svelte stores (theme, app state)
-│   └── app.css              # Global styles (Tailwind)
-├── static/                  # Static assets
-├── svelte.config.js         # SvelteKit configuration
-├── vite.config.ts           # Vite bundler config
-├── tailwind.config.js       # Tailwind CSS config
-└── wrangler.toml            # Cloudflare Pages config
+│   │   ├── components/        # Reusable UI components
+│   │   │   ├── CharacterPanel.svelte    # Character management with inline editing
+│   │   │   ├── CharactersPreview.svelte  # Shared character-overview card
+│   │   │   ├── FountainEditor.svelte    # Syntax-highlighted Fountain editor
+│   │   │   ├── FountainPreview.svelte   # Formatted screenplay preview
+│   │   │   ├── OutlinePreview.svelte    # Shared story-outline card
+│   │   │   ├── SceneEditor.svelte       # TipTap rich-text editor
+│   │   │   └── TemplatePicker.svelte    # Modal dialog for story templates
+│   │   ├── domain/            # Core story logic
+│   │   │   ├── story.ts       # Types & factories (Story, Act, Scene, Character, Screenplay)
+│   │   │   └── templates.ts   # 6 built-in template definitions + factory
+│   │   ├── persistence/       # IndexedDB database layer (Dexie)
+│   │   ├── stores/            # Svelte stores (theme, app state)
+│   │   ├── export/            # Markdown, PDF, Fountain, .act export
+│   │   └── import/            # .act file import with ID regeneration
+│   └── app.css                # Global styles, design tokens, Tailwind v4
+├── static/                    # Static assets
+├── svelte.config.js           # SvelteKit configuration
+├── vite.config.ts             # Vite bundler config
+├── tailwind.config.js         # Tailwind CSS config
+└── wrangler.toml              # Cloudflare Pages config
 ```
 
 ## Tech Stack
@@ -150,8 +180,8 @@ Act works on any static host:
 
 1. **Words come first** — The editor never gets between you and your writing.
 2. **Instant response** — Every action completes immediately. Autosave is silent.
-3. **Structure as guide** — The three-act framework is optional scaffolding, not a cage.
-4. **Accessibility** — WCAG AA compliant, dark mode, keyboard navigation, reduced motion support.
+3. **Structure as guide** — Templates and acts are optional scaffolding, not a cage.
+4. **Accessibility** — WCAG AA compliant, dark mode, keyboard navigation, reduced motion support, large touch targets.
 5. **No clutter** — Every element earns its place.
 
 See [DESIGN.md](DESIGN.md) for the full design system, color palette, and component specifications.
@@ -178,8 +208,3 @@ Before submitting:
 ## License
 
 This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
-
----
-
-[![Deploy to Cloudflare Pages](https://img.shields.io/badge/cloudflare-pages-orange)](https://act.pages.dev)
-[![Built with SvelteKit](https://img.shields.io/badge/svelte-kit-FF3E00?logo=svelte)](https://kit.svelte.dev)

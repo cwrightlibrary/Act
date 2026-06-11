@@ -18,6 +18,43 @@
 	// Screenplay Fountain formatted preview visibility (hidden by default on mobile)
 	let previewVisible = $state(true);
 
+	// Resizable split position — percentage for left panel (editor/character panel)
+	let splitPos = $state(40);
+	let resizeInfo = $state<{ startX: number; startPct: number; container: HTMLElement } | null>(null);
+
+	function startResize(e: MouseEvent | TouchEvent) {
+		const handle = e.currentTarget as HTMLElement;
+		const container = handle.parentElement!;
+		const startPct = splitPos;
+		resizeInfo = { startX: 'touches' in e ? e.touches[0].clientX : e.clientX, startPct, container };
+		e.preventDefault();
+	}
+
+	// Global mousemove / mouseup during resize
+	$effect(() => {
+		if (!resizeInfo) return;
+		const { container } = resizeInfo;
+		function onMove(e: MouseEvent | TouchEvent) {
+			const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+			const rect = container.getBoundingClientRect();
+			const pct = ((clientX - rect.left) / rect.width) * 100;
+			splitPos = Math.max(20, Math.min(80, pct));
+		}
+		function onUp() {
+			resizeInfo = null;
+		}
+		window.addEventListener('mousemove', onMove);
+		window.addEventListener('mouseup', onUp);
+		window.addEventListener('touchmove', onMove, { passive: true });
+		window.addEventListener('touchend', onUp);
+		return () => {
+			window.removeEventListener('mousemove', onMove);
+			window.removeEventListener('mouseup', onUp);
+			window.removeEventListener('touchmove', onMove);
+			window.removeEventListener('touchend', onUp);
+		};
+	});
+
 	function cyclePreview() {
 		const modes: PreviewMode[] = ['closed', 'outline', 'characters'];
 		const idx = modes.indexOf(previewMode);
@@ -30,6 +67,13 @@
 			case 'characters': return 'Characters';
 			default: return 'Preview';
 		}
+	}
+
+	// Whether a panel is actually visible on the right side (accounts for
+	// the screenplay Fountain preview which lives outside the previewMode cycle).
+	function previewActive(): boolean {
+		if (screenplayMode && previewMode === 'closed') return previewVisible;
+		return previewMode !== 'closed';
 	}
 	let exportOpen = $state(false);
 	let exportContainer = $state<HTMLElement>();
@@ -534,19 +578,19 @@
 										ondragleave={handleSceneDragLeave}
 										data-act-id={act.id}
 										data-index={scene.order}
-										class="sidebar-scene-btn group flex w-full cursor-pointer items-start justify-between gap-1 px-2 py-2"
+										class="sidebar-scene-btn group relative flex w-full cursor-pointer items-start justify-between gap-1 px-2 py-2"
 										class:selected={selectedSceneId === scene.id}
 										class:dragging={dragInfo?.sceneId === scene.id}
 										class:drop-indicator={isDropTarget(act.id, scene.order)}
 										aria-label="Scene {scene.order + 1}: {scene.title || 'New Scene'}"
 									>
-										<div class="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+										<div class="flex min-w-0 flex-1 flex-col items-start gap-0.5 scene-text-pad">
 											<span class="flex w-full min-w-0 items-center gap-2 text-xs">
 												<span class="flex-shrink-0" style="color: var(--text-muted);">{scene.order + 1}.</span>
-												<span class="truncate font-medium" title={scene.title || 'New Scene'}>{scene.title || 'New Scene'}</span>
+												<span class="font-medium" title={scene.title || 'New Scene'}>{scene.title || 'New Scene'}</span>
 											</span>
 											{#if scenePreview(scene)}
-												<span class="ml-4 truncate text-xs" style="color: var(--text-muted); line-height: 1.3;" title={scenePreview(scene)}>
+												<span class="ml-4 line-clamp-2 text-xs" style="color: var(--text-muted); line-height: 1.3;" title={scenePreview(scene)}>
 													{scenePreview(scene)}
 												</span>
 											{/if}
@@ -565,7 +609,7 @@
 												</span>
 											{/if}
 										</div>
-										<div 									class="scene-actions flex flex-shrink-0 items-center gap-px opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" class:opacity-100={selectedSceneId === scene.id}>
+										<div class="scene-actions opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" class:opacity-100={selectedSceneId === scene.id}>
 											<button
 												onclick={(e) => { e.stopPropagation(); moveSceneUp(act.id, scene.id); }}
 												class="scene-move-btn"
@@ -777,10 +821,10 @@
 						onclick={cyclePreview}
 						class="btn-ghost flex items-center gap-1.5 px-3 py-1.5 text-xs"
 						style="min-height: 36px;"
-						aria-label="Toggle preview: {previewLabel()}"
+						aria-label="Cycle preview: {previewLabel()}"
 					>
 						<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-							{#if previewMode !== 'closed'}
+							{#if previewActive()}
 								<path d="M1.5 6.5s2-4 5-4 5 4 5 4-2 4-5 4-5-4-5-4Z" />
 								<circle cx="6.5" cy="6.5" r="1.5" />
 							{:else}
@@ -792,8 +836,8 @@
 						<span class="text-xs font-medium">{previewLabel()}</span>
 					</button>
 
-				<!-- Screenplay Fountain preview toggle — shown only in screenplay mode -->
-				{#if screenplayMode}
+				<!-- Screenplay Fountain preview toggle — only shows when toggling has immediate effect -->
+				{#if screenplayMode && previewMode === 'closed'}
 					<button
 						onclick={() => (previewVisible = !previewVisible)}
 						class="btn-ghost flex items-center justify-center px-2 py-1.5 text-xs"
@@ -817,27 +861,50 @@
 
 			<!-- Editor area — switches between Character panel, Scene editor, and Fountain editor -->
 			{#if characterMode}
-				<div class="flex flex-1 gap-3 p-3 min-h-0 flex-col md:flex-row">
-					<div class="flex flex-1 flex-col overflow-hidden rounded-sm min-h-0" style="background: var(--bg-front); border: 1.5px solid var(--border-base);">
+				{@const charResize = previewMode === 'outline' || previewMode === 'characters'}
+				<div class="flex flex-1 gap-3 md:gap-0 p-3 min-h-0 flex-col md:flex-row">
+					<!-- Character panel — resizable when preview is shown -->
+					<div
+						class="flex flex-col overflow-hidden rounded-sm min-h-0 w-full"
+						style="background: var(--bg-front); border: 1.5px solid var(--border-base);"
+						style:width={charResize ? splitPos + '%' : undefined}
+						style:flex={charResize ? 'none' : undefined}
+					>
 						<CharacterPanel {story} selectedSceneId={$page.params.id ? selectedSceneId : null} onchange={debouncedPersist} />
 					</div>
-					{#if previewMode === 'outline'}
-						<OutlinePreview {story} containerClass="w-full md:w-auto" />
-					{/if}
-					{#if previewMode === 'characters'}
-						<CharactersPreview {story} containerClass="w-full md:w-auto" />
+
+					{#if previewMode === 'outline' || previewMode === 'characters'}
+						<!-- Resize handle — desktop only -->
+						<div
+							class="hidden md:flex resize-handle"
+							onmousedown={startResize}
+							ontouchstart={startResize}
+							aria-label="Resize panels"
+							role="separator"
+							tabindex="0"
+							onkeydown={(e) => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { splitPos = Math.max(20, Math.min(80, splitPos + (e.key === 'ArrowLeft' ? -2 : 2))); e.preventDefault(); } }}
+						>
+							<div class="resize-handle-dots"></div>
+						</div>
+
+						{#if previewMode === 'outline'}
+							<OutlinePreview {story} containerClass="flex-1 min-w-0" />
+						{:else if previewMode === 'characters'}
+							<CharactersPreview {story} containerClass="flex-1 min-w-0" />
+						{/if}
 					{/if}
 				</div>
 			{:else if screenplayMode}
 				<!-- Fountain Screenplay Editor + Preview / Outline / Characters -->
 				{#if screenplay}
-					<div class="flex flex-1 gap-3 p-3 min-h-0 flex-col md:flex-row">
-						<!-- Fountain source editor — 40% (50% when preview is closed) -->
+					{@const spResize = previewMode !== 'closed' || (previewMode === 'closed' && previewVisible)}
+					<div class="flex flex-1 gap-3 md:gap-0 p-3 min-h-0 flex-col md:flex-row">
+						<!-- Fountain source editor — resizable width -->
 						<div
-							class="flex flex-col overflow-hidden rounded-sm min-h-0"
-							class:flex-[2]={previewMode !== 'closed'}
-							class:flex-1={previewMode === 'closed'}
-							style="background: var(--bg-front); border: 1.5px solid var(--border-base); {previewMode === 'closed' ? 'width: 100%;' : ''}"
+							class="flex flex-col overflow-hidden rounded-sm min-h-0 w-full"
+							style="background: var(--bg-front); border: 1.5px solid var(--border-base);"
+							style:width={spResize ? splitPos + '%' : undefined}
+							style:flex={spResize ? 'none' : undefined}
 						>
 							{#if FountainEditor}
 								<FountainEditor content={screenplay.content} onUpdate={handleScreenplayUpdate} />
@@ -846,29 +913,62 @@
 
 						<!-- Right panel: Fountain preview (closed) / Outline / Characters -->
 						{#if previewMode === 'closed'}
-							<!-- Fountain formatted preview — 60% (hidden on mobile unless toggled) -->
+							<!-- Fountain formatted preview — resizable -->
 							{#if previewVisible}
-							<div class="flex flex-[3] flex-col overflow-hidden rounded-sm" style="background: var(--bg-front); border: 1.5px solid var(--border-base);">
-								<div class="border-b px-3 py-1.5 flex items-center justify-between" style="border-color: var(--border-base); background: var(--bg-base);">
-									<span class="text-xs font-semibold" style="color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">Preview</span>
-									<button
-										onclick={() => (previewVisible = false)}
-										class="text-xs px-1.5 py-0.5 rounded-sm md:hidden"
-										style="color: var(--text-dim); border: 1px solid var(--border-base);"
-										aria-label="Hide preview"
-									>Hide</button>
+								<div
+									class="hidden md:flex resize-handle"
+									onmousedown={startResize}
+									ontouchstart={startResize}
+									aria-label="Resize panels"
+									role="separator"
+									tabindex="0"
+									onkeydown={(e) => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { splitPos = Math.max(20, Math.min(80, splitPos + (e.key === 'ArrowLeft' ? -2 : 2))); e.preventDefault(); } }}
+								>
+									<div class="resize-handle-dots"></div>
 								</div>
-								<div class="flex-1 overflow-y-auto min-h-0 h-0">
-								{#if FountainPreview}
-									<FountainPreview content={screenplay.content} />
-								{/if}
+								<div class="flex-1 min-w-0 flex flex-col overflow-hidden rounded-sm" style="background: var(--bg-front); border: 1.5px solid var(--border-base);">
+									<div class="border-b px-3 py-1.5 flex items-center justify-between" style="border-color: var(--border-base); background: var(--bg-base);">
+										<span class="text-xs font-semibold" style="color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">Preview</span>
+										<button
+											onclick={() => (previewVisible = false)}
+											class="text-xs px-1.5 py-0.5 rounded-sm md:hidden"
+											style="color: var(--text-dim); border: 1px solid var(--border-base);"
+											aria-label="Hide preview"
+										>Hide</button>
+									</div>
+									<div class="flex-1 overflow-y-auto min-h-0 h-0">
+									{#if FountainPreview}
+										<FountainPreview content={screenplay.content} />
+									{/if}
+									</div>
 								</div>
-							</div>
 							{/if}
 						{:else if previewMode === 'outline'}
-							<OutlinePreview {story} containerClass="flex-[3] w-full md:w-auto" />
+							<div
+								class="hidden md:flex resize-handle"
+								onmousedown={startResize}
+								ontouchstart={startResize}
+								aria-label="Resize panels"
+								role="separator"
+								tabindex="0"
+								onkeydown={(e) => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { splitPos = Math.max(20, Math.min(80, splitPos + (e.key === 'ArrowLeft' ? -2 : 2))); e.preventDefault(); } }}
+							>
+								<div class="resize-handle-dots"></div>
+							</div>
+							<OutlinePreview {story} containerClass="flex-1 min-w-0" />
 						{:else if previewMode === 'characters'}
-							<CharactersPreview {story} containerClass="flex-[3] w-full md:w-auto" />
+							<div
+								class="hidden md:flex resize-handle"
+								onmousedown={startResize}
+								ontouchstart={startResize}
+								aria-label="Resize panels"
+								role="separator"
+								tabindex="0"
+								onkeydown={(e) => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { splitPos = Math.max(20, Math.min(80, splitPos + (e.key === 'ArrowLeft' ? -2 : 2))); e.preventDefault(); } }}
+							>
+								<div class="resize-handle-dots"></div>
+							</div>
+							<CharactersPreview {story} containerClass="flex-1 min-w-0" />
 						{/if}
 					</div>
 				{:else}
@@ -880,12 +980,14 @@
 				{/if}
 			{:else if selectedScene()}
 				{@const scene = selectedScene()!}
-				<div class="flex flex-1 gap-3 p-3 min-h-0 flex-col md:flex-row">
-					<!-- Editor panel -->
+				{@const sceneResize = previewMode === 'outline' || previewMode === 'characters'}
+				<div class="flex flex-1 gap-3 md:gap-0 p-3 min-h-0 flex-col md:flex-row">
+					<!-- Editor panel — resizable when preview is shown -->
 					<div
-						class="flex flex-col overflow-hidden rounded-sm min-h-0 transition-all duration-200"
-						class:flex-1={previewMode !== 'closed'}
-						style="background: var(--bg-front); border: 1.5px solid var(--border-base); {previewMode === 'closed' ? 'width: 100%;' : ''}"
+						class="flex flex-col overflow-hidden rounded-sm min-h-0 w-full"
+						style="background: var(--bg-front); border: 1.5px solid var(--border-base);"
+						style:width={sceneResize ? splitPos + '%' : undefined}
+						style:flex={sceneResize ? 'none' : undefined}
 					>
 						<div class="flex-1 overflow-y-auto min-h-0 h-0">
 							<SceneEditor
@@ -898,14 +1000,27 @@
 						</div>
 					</div>
 
-					<!-- Preview panel — story outline -->
-					{#if previewMode === 'outline'}
-						<OutlinePreview {story} containerClass="flex-1 transition-all duration-200 w-full md:w-auto" />
-					{/if}
+					{#if previewMode === 'outline' || previewMode === 'characters'}
+						<!-- Resize handle — desktop only -->
+						<div
+							class="hidden md:flex resize-handle"
+							onmousedown={startResize}
+							ontouchstart={startResize}
+							aria-label="Resize panels"
+							role="separator"
+							tabindex="0"
+							onkeydown={(e) => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { splitPos = Math.max(20, Math.min(80, splitPos + (e.key === 'ArrowLeft' ? -2 : 2))); e.preventDefault(); } }}
+						>
+							<div class="resize-handle-dots"></div>
+						</div>
 
-					<!-- Preview panel — character overview -->
-					{#if previewMode === 'characters'}
-						<CharactersPreview {story} containerClass="flex-1 transition-all duration-200 w-full md:w-auto" />
+						<div class="flex-1 min-w-0">
+							{#if previewMode === 'outline'}
+								<OutlinePreview {story} />
+							{:else}
+								<CharactersPreview {story} />
+							{/if}
+						</div>
 					{/if}
 				</div>
 
