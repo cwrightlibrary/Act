@@ -510,7 +510,7 @@
 		background: var(--bg-base);
 	}
 
-	/* ── Scene delete button (×) — size-only, opacity via parent ── */
+	/* ── Scene/act delete button (×) — size-only ── */
 	.scene-delete-btn {
 		color: var(--text-dim);
 		border: none;
@@ -526,6 +526,31 @@
 		align-items: center;
 		justify-content: center;
 		border-radius: 2px;
+	}
+
+	/* Act-header delete button: always subtly visible, full on hover/focus */
+	.act-delete-btn {
+		opacity: 0.35;
+		transition: opacity 0.15s ease-out;
+		color: var(--text-dim);
+		border: none;
+		background: none;
+		cursor: pointer;
+		padding: 0;
+		width: 28px;
+		height: 28px;
+		font-size: 16px;
+		line-height: 1;
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 2px;
+	}
+	.act-delete-btn:hover,
+	.act-delete-btn:focus-visible {
+		opacity: 1;
+		color: var(--text-muted);
 	}
 
 	.scene-delete-btn:hover {
@@ -760,6 +785,12 @@
 			font-size: 18px;
 		}
 
+		.act-delete-btn {
+			width: 36px;
+			height: 36px;
+			font-size: 18px;
+		}
+
 		.scene-move-btn {
 			width: 36px;
 			height: 36px;
@@ -767,6 +798,11 @@
 
 		.scene-text-pad {
 			padding-right: 114px;
+		}
+
+		/* Scene actions: always visible on touch (no hover) */
+		.scene-actions:not(.opacity-100) {
+			opacity: 0.5;
 		}
 	}
 

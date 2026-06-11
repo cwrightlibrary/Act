@@ -42,8 +42,11 @@ export interface Story {
 	title: string;
 	author: string;
 	logline: string;
+	notes: string;
 	acts: Act[];
 	characters: Character[];
+	/** Optional color tag for dashboard organization */
+	color?: string;
 	createdAt: number;
 	updatedAt: number;
 }
@@ -56,6 +59,7 @@ export function createStory(title = 'Untitled Story'): Story {
 		title,
 		author: '',
 		logline: '',
+		notes: '',
 		acts: [
 			{ id: crypto.randomUUID(), title: 'Act I — Setup', order: 0, scenes: [] },
 			{ id: crypto.randomUUID(), title: 'Act II — Confrontation', order: 1, scenes: [] },

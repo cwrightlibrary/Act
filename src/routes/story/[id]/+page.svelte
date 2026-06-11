@@ -5,6 +5,7 @@
 	import type { Story, Scene, Screenplay } from '$lib/domain/story';
 	import SceneEditor from '$lib/components/SceneEditor.svelte';
 	import CharacterPanel from '$lib/components/CharacterPanel.svelte';
+	import NotesEditor from '$lib/components/NotesEditor.svelte';
 	import OutlinePreview from '$lib/components/OutlinePreview.svelte';
 	import CharactersPreview from '$lib/components/CharactersPreview.svelte';
 	import type { Component } from 'svelte';
@@ -82,6 +83,7 @@
 
 	let screenplayMode = $state(false);
 	let characterMode = $state(false);
+	let notesMode = $state(false);
 	let screenplay = $state<Screenplay | null>(null);
 	let spSaveTimer: ReturnType<typeof setTimeout> | null = null;
 	let exportError = $state<string | null>(null);
@@ -169,6 +171,12 @@
 		const scene = selectedScene();
 		if (!scene) return;
 		scene.content = html;
+		debouncedPersist();
+	}
+
+	function handleNotesUpdate(text: string) {
+		if (!story) return;
+		story.notes = text;
 		debouncedPersist();
 	}
 
@@ -459,20 +467,34 @@
 	$effect(() => {
 		function handleKeydown(e: KeyboardEvent) {
 			if (!story) return;
-			// Ctrl+K or Cmd+K: toggle character mode
+			// Ctrl+K or Cmd+K: cycle editor modes (Scenes → Screenplay → Characters → Notes → Scenes)
 			if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
 				e.preventDefault();
-				characterMode = !characterMode;
-				if (characterMode) screenplayMode = false;
+				if (!screenplayMode && !characterMode && !notesMode) {
+					// Scenes → Screenplay
+					screenplayMode = true;
+				} else if (screenplayMode) {
+					// Screenplay → Characters
+					screenplayMode = false;
+					characterMode = true;
+				} else if (characterMode) {
+					// Characters → Notes
+					characterMode = false;
+					notesMode = true;
+				} else if (notesMode) {
+					// Notes → Scenes
+					notesMode = false;
+				}
 				return;
 			}
-			// Escape: close export dropdown, exit character mode
+			// Escape: close export dropdown, exit character/notes mode
 			if (e.key === 'Escape') {
 				if (exportOpen) {
 					exportOpen = false;
 					e.preventDefault();
-				} else if (characterMode) {
+				} else if (characterMode || notesMode) {
 					characterMode = false;
+					notesMode = false;
 					e.preventDefault();
 				}
 			}
@@ -557,7 +579,7 @@
 									<span class="text-xs" style="color: var(--text-muted);">{act.scenes.length}</span>
 									<button
 										onclick={(e) => { e.stopPropagation(); deleteAct(act.id); }}
-										class="scene-delete-btn opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
+										class="act-delete-btn"
 										aria-label="Delete act"
 									>&times;</button>
 								</div>
@@ -698,169 +720,228 @@
 		<div class="flex flex-1 flex-col min-h-0">
 			<!-- Editor header bar -->
 			<div class="flex items-center border-b px-1" style="border-color: var(--border-strong); background: var(--bg-base);">
-				<button
-					onclick={() => (sidebarOpen = !sidebarOpen)}
-					class="btn-ghost flex items-center justify-center px-3 py-2"
-					aria-label="Toggle sidebar"
-					style="min-height: 44px;"
-				>
-					<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-						{#if sidebarOpen}
-							<line x1="9" y1="1" x2="9" y2="13" />
-							<line x1="4" y1="4" x2="1" y2="7" />
-							<line x1="4" y1="10" x2="1" y2="7" />
-						{:else}
-							<line x1="5" y1="1" x2="5" y2="13" />
-							<line x1="10" y1="4" x2="13" y2="7" />
-							<line x1="10" y1="10" x2="13" y2="7" />
-						{/if}
-					</svg>
-				</button>
-
-				<!-- Mode toggle: Scenes / Screenplay / Characters -->
-				<div class="ml-1 flex items-center gap-0.5 rounded-sm border" style="border-color: var(--border-base);">
+				<div class="flex items-center flex-shrink-0">
 					<button
-						onclick={() => { screenplayMode = false; characterMode = false; }}
-						class="px-3 py-1.5 text-xs font-medium transition-colors"
-						style="background: {!screenplayMode && !characterMode ? 'var(--bg-front)' : 'transparent'}; color: {!screenplayMode && !characterMode ? 'var(--text-strong)' : 'var(--text-muted)'}; border-radius: 2px; border: none; cursor: pointer; min-height: 36px;"
-					>Scenes</button>
-					<button
-						onclick={() => { screenplayMode = false; characterMode = false; setTimeout(() => { screenplayMode = true; }, 0); }}
-						class="px-3 py-1.5 text-xs font-medium transition-colors"
-						style="background: {screenplayMode && !characterMode ? 'var(--bg-front)' : 'transparent'}; color: {screenplayMode && !characterMode ? 'var(--text-strong)' : 'var(--text-muted)'}; border-radius: 2px; border: none; cursor: pointer; min-height: 36px;"
-					>Screenplay</button>
-					<button
-						onclick={() => { characterMode = !characterMode; if (characterMode) screenplayMode = false; }}
-						class="px-3 py-1.5 text-xs font-medium transition-colors"
-						style="background: {characterMode ? 'var(--bg-front)' : 'transparent'}; color: {characterMode ? 'var(--text-strong)' : 'var(--text-muted)'}; border-radius: 2px; border: none; cursor: pointer; min-height: 36px;"
-					>Characters</button>
-				</div>
-
-				{#if !screenplayMode && !characterMode && selectedScene()}
-					{@const scene = selectedScene()!}
-					<div class="hidden md:flex flex-1 flex-col gap-1 px-2 py-1">
-						<input
-							type="text"
-							bind:value={scene.title}
-							onchange={persist}
-							class="field-input w-full text-sm font-medium outline-none"
-							style="color: var(--text-strong);"
-							placeholder="Scene title"
-							aria-label="Scene title"
-						/>
-						<input
-							type="text"
-							bind:value={scene.summary}
-							onchange={persist}
-							class="field-input w-full text-xs outline-none"
-							style="color: var(--text-muted);"
-							placeholder="Brief summary of this scene…"
-							aria-label="Scene summary"
-						/>
-					</div>
-				{/if}
-
-				<!-- Export (always visible) -->
-				<div class="relative ml-auto" bind:this={exportContainer}>
-					<button
-						onclick={() => (exportOpen = !exportOpen)}
-						class="btn-ghost flex items-center gap-1.5 px-3 py-1.5 text-xs"
-						style="min-height: 36px;"
-						aria-label="Export"
+						onclick={() => (sidebarOpen = !sidebarOpen)}
+						class="btn-ghost flex items-center justify-center px-3 py-2"
+						aria-label="Toggle sidebar"
+						style="min-height: 44px;"
 					>
-						<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-							<path d="M6.5 1v7M4 5.5l2.5 2.5L9 5.5" />
-							<path d="M1 8.5v2.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V8.5" />
+						<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+							{#if sidebarOpen}
+								<line x1="9" y1="1" x2="9" y2="13" />
+								<line x1="4" y1="4" x2="1" y2="7" />
+								<line x1="4" y1="10" x2="1" y2="7" />
+							{:else}
+								<line x1="5" y1="1" x2="5" y2="13" />
+								<line x1="10" y1="4" x2="13" y2="7" />
+								<line x1="10" y1="10" x2="13" y2="7" />
+							{/if}
 						</svg>
-						<span class="text-xs font-medium">Export</span>
 					</button>
 
-					{#if exportOpen}
-						<div
-							class="absolute right-0 top-full z-50 mt-1 w-48 overflow-hidden rounded-sm border"
-							style="background: var(--bg-front); border-color: var(--border-strong);"
+					<!-- Mode toggle: Scenes / Screenplay / Characters / Notes -->
+					<div class="ml-1 flex items-center gap-0.5 rounded-sm border" style="border-color: var(--border-base);">
+						<button
+							onclick={() => { screenplayMode = false; characterMode = false; notesMode = false; }}
+							class="px-3 py-1.5 text-xs font-medium transition-colors"
+							style="background: {!screenplayMode && !characterMode && !notesMode ? 'var(--bg-front)' : 'transparent'}; color: {!screenplayMode && !characterMode && !notesMode ? 'var(--text-strong)' : 'var(--text-muted)'}; border-radius: 2px; border: none; cursor: pointer; min-height: 36px;"
+						>Scenes</button>
+						<button
+							onclick={() => { screenplayMode = false; characterMode = false; notesMode = false; setTimeout(() => { screenplayMode = true; }, 0); }}
+							class="px-3 py-1.5 text-xs font-medium transition-colors"
+							style="background: {screenplayMode && !characterMode ? 'var(--bg-front)' : 'transparent'}; color: {screenplayMode && !characterMode ? 'var(--text-strong)' : 'var(--text-muted)'}; border-radius: 2px; border: none; cursor: pointer; min-height: 36px;"
+						>Screenplay</button>
+						<button
+							onclick={() => { characterMode = !characterMode; if (characterMode) { screenplayMode = false; notesMode = false; } }}
+							class="px-3 py-1.5 text-xs font-medium transition-colors"
+							style="background: {characterMode ? 'var(--bg-front)' : 'transparent'}; color: {characterMode ? 'var(--text-strong)' : 'var(--text-muted)'}; border-radius: 2px; border: none; cursor: pointer; min-height: 36px;"
+						>Characters</button>
+						<button
+							onclick={() => { notesMode = !notesMode; if (notesMode) { screenplayMode = false; characterMode = false; } }}
+							class="px-3 py-1.5 text-xs font-medium transition-colors"
+							style="background: {notesMode ? 'var(--bg-front)' : 'transparent'}; color: {notesMode ? 'var(--text-strong)' : 'var(--text-muted)'}; border-radius: 2px; border: none; cursor: pointer; min-height: 36px;"
+						>Notes</button>
+					</div>
+				</div>
+
+				<!-- Story title — centered -->
+				<div class="flex-1 flex items-center justify-center min-w-0 px-3">
+					<h1
+						class="truncate text-sm font-semibold"
+						style="color: var(--text-strong);"
+						title={story?.title}
+					>
+						{story?.title ?? 'Untitled'}
+					</h1>
+				</div>
+
+				<!-- Right-side actions -->
+				<div class="flex items-center gap-1 flex-shrink-0">
+					<!-- Export (always visible) -->
+					<div class="relative" bind:this={exportContainer}>
+						<button
+							onclick={() => (exportOpen = !exportOpen)}
+							class="btn-ghost flex items-center gap-1.5 px-3 py-1.5 text-xs"
+							style="min-height: 36px;"
+							aria-label="Export"
 						>
-							{#if story}
-								<button onclick={async () => { exportOpen = false; const { exportStoryMarkdown } = await import('$lib/export'); exportStoryMarkdown(story!); }} class="export-item">
-									<span class="font-semibold" style="width: 1.2rem;">M</span>
-									Story as Markdown
-								</button>
-								<button onclick={async () => { exportOpen = false; const { exportStoryPDF } = await import('$lib/export'); exportStoryPDF(story!); }} class="export-item">
-									<span class="font-semibold" style="width: 1.2rem;">P</span>
-									Story as PDF
-								</button>
-								<div style="height: 1px; background: var(--border-base); margin: 2px 0;"></div>
-								{#if screenplay}
-									<button onclick={async () => { exportOpen = false; exportError = null; if (!screenplay) return; try { const { exportScreenplayPDF } = await import('$lib/export'); await exportScreenplayPDF(screenplay.content, story!.title); } catch (e) { exportError = 'Screenplay PDF export failed. Please try again.'; console.error(e); } }} class="export-item">
+							<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+								<path d="M6.5 1v7M4 5.5l2.5 2.5L9 5.5" />
+								<path d="M1 8.5v2.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V8.5" />
+							</svg>
+							<span class="text-xs font-medium">Export</span>
+						</button>
+
+						{#if exportOpen}
+							<div
+								class="absolute right-0 top-full z-50 mt-1 w-48 overflow-hidden rounded-sm border"
+								style="background: var(--bg-front); border-color: var(--border-strong);"
+							>
+								{#if story}
+									<button onclick={async () => { exportOpen = false; const { exportStoryMarkdown } = await import('$lib/export'); exportStoryMarkdown(story!); }} class="export-item">
+										<span class="font-semibold" style="width: 1.2rem;">M</span>
+										Story as Markdown
+									</button>
+									<button onclick={async () => { exportOpen = false; const { exportStoryPDF } = await import('$lib/export'); exportStoryPDF(story!); }} class="export-item">
 										<span class="font-semibold" style="width: 1.2rem;">P</span>
-										Screenplay as PDF
+										Story as PDF
 									</button>
 									<div style="height: 1px; background: var(--border-base); margin: 2px 0;"></div>
+									{#if screenplay}
+										<button onclick={async () => { exportOpen = false; exportError = null; if (!screenplay) return; try { const { exportScreenplayPDF } = await import('$lib/export'); await exportScreenplayPDF(screenplay.content, story!.title); } catch (e) { exportError = 'Screenplay PDF export failed. Please try again.'; console.error(e); } }} class="export-item">
+											<span class="font-semibold" style="width: 1.2rem;">P</span>
+											Screenplay as PDF
+										</button>
+										<div style="height: 1px; background: var(--border-base); margin: 2px 0;"></div>
+									{/if}
+									<button onclick={async () => { exportOpen = false; const { exportOutlineMarkdown } = await import('$lib/export'); exportOutlineMarkdown(story!); }} class="export-item">
+										<span class="font-semibold" style="width: 1.2rem;">M</span>
+										Outline as Markdown
+									</button>
+									<button onclick={async () => { exportOpen = false; const { exportOutlinePDF } = await import('$lib/export'); exportOutlinePDF(story!); }} class="export-item">
+										<span class="font-semibold" style="width: 1.2rem;">P</span>
+										Outline as PDF
+									</button>
+									<div style="height: 1px; background: var(--border-base); margin: 2px 0;"></div>
+									<button onclick={async () => { exportOpen = false; const { exportActFile } = await import('$lib/export'); exportActFile(story!, screenplay); }} class="export-item">
+										<span class="font-semibold" style="width: 1.2rem;">A</span>
+										Story as .act
+									</button>
 								{/if}
-								<button onclick={async () => { exportOpen = false; const { exportOutlineMarkdown } = await import('$lib/export'); exportOutlineMarkdown(story!); }} class="export-item">
-									<span class="font-semibold" style="width: 1.2rem;">M</span>
-									Outline as Markdown
-								</button>
-								<button onclick={async () => { exportOpen = false; const { exportOutlinePDF } = await import('$lib/export'); exportOutlinePDF(story!); }} class="export-item">
-									<span class="font-semibold" style="width: 1.2rem;">P</span>
-									Outline as PDF
-								</button>
-								<div style="height: 1px; background: var(--border-base); margin: 2px 0;"></div>
-								<button onclick={async () => { exportOpen = false; const { exportActFile } = await import('$lib/export'); exportActFile(story!, screenplay); }} class="export-item">
-									<span class="font-semibold" style="width: 1.2rem;">A</span>
-									Story as .act
-								</button>
+							</div>
+						{/if}
+					</div>
+
+					<!-- Preview toggle — cycles outline / characters / closed -->
+					
+						<button
+							onclick={cyclePreview}
+							class="btn-ghost flex items-center gap-1.5 px-3 py-1.5 text-xs"
+							style="min-height: 36px;"
+							aria-label="Cycle preview: {previewLabel()}"
+						>
+							<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+								{#if previewActive()}
+									<path d="M1.5 6.5s2-4 5-4 5 4 5 4-2 4-5 4-5-4-5-4Z" />
+									<circle cx="6.5" cy="6.5" r="1.5" />
+								{:else}
+									<line x1="1.5" y1="1.5" x2="11.5" y2="11.5" />
+									<path d="M4.8 3.4A5 5 0 0 1 6.5 2.5c3 0 5 4 5 4s-.6 1.2-1.7 2.2" />
+									<path d="M3 4.8A5.1 5.1 0 0 0 1.5 6.5s2 4 5 4c.9 0 1.8-.3 2.6-.8" />
+								{/if}
+							</svg>
+							<span class="text-xs font-medium">{previewLabel()}</span>
+						</button>
+
+					<!-- Screenplay Fountain preview toggle -->
+					{#if screenplayMode && previewMode === 'closed'}
+						<button
+							onclick={() => (previewVisible = !previewVisible)}
+							class="btn-ghost flex items-center justify-center px-2 py-1.5 text-xs"
+							style="min-height: 36px; min-width: 36px;"
+							aria-label={previewVisible ? 'Hide formatted preview' : 'Show formatted preview'}
+							title={previewVisible ? 'Hide formatted preview' : 'Show formatted preview'}
+						>
+							<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+								{#if previewVisible}
+									<path d="M1.5 6.5s2-4 5-4 5 4 5 4-2 4-5 4-5-4-5-4Z" />
+									<circle cx="6.5" cy="6.5" r="1.5" />
+								{:else}
+									<line x1="1.5" y1="1.5" x2="11.5" y2="11.5" />
+									<path d="M4.8 3.4A5 5 0 0 1 6.5 2.5c3 0 5 4 5 4s-.6 1.2-1.7 2.2" />
+									<path d="M3 4.8A5.1 5.1 0 0 0 1.5 6.5s2 4 5 4c.9 0 1.8-.3 2.6-.8" />
+								{/if}
+							</svg>
+						</button>
+					{/if}
+				</div>
+			</div>
+
+			<!-- Scene bar — compact row below header, Scenes mode only -->
+			{#if !screenplayMode && !characterMode && !notesMode && selectedScene()}
+				{@const scene = selectedScene()!}
+				<div class="hidden md:flex items-center border-b gap-2 px-3" style="border-color: var(--border-strong); background: var(--bg-base); min-height: 32px;">
+					<input
+						type="text"
+						bind:value={scene.title}
+						onchange={persist}
+						class="field-input min-w-0 flex-1 text-xs font-medium outline-none"
+						style="color: var(--text-strong);"
+						placeholder="Scene title"
+						aria-label="Scene title"
+					/>
+					<span class="flex-shrink-0 text-xs" style="color: var(--text-dim);">—</span>
+					<input
+						type="text"
+						bind:value={scene.summary}
+						onchange={persist}
+						class="field-input min-w-0 flex-[2] text-xs outline-none"
+						style="color: var(--text-muted);"
+						placeholder="Brief summary of this scene…"
+						aria-label="Scene summary"
+					/>
+				</div>
+			{/if}
+
+			<!-- Editor area — switches between Notes, Characters, Screenplay, and Scenes modes -->
+			{#if notesMode}
+				{@const notesResize = previewMode === 'outline' || previewMode === 'characters'}
+				<div class="flex flex-1 gap-3 md:gap-0 p-3 min-h-0 flex-col md:flex-row">
+					<!-- Notes editor — resizable when preview is shown -->
+					<div
+						class="flex flex-col overflow-hidden rounded-sm min-h-0 w-full"
+						style="background: var(--bg-front); border: 1.5px solid var(--border-base);"
+						style:width={notesResize ? splitPos + '%' : undefined}
+						style:flex={notesResize ? 'none' : undefined}
+					>
+						<NotesEditor key={story.id} content={story.notes} onUpdate={handleNotesUpdate} />
+					</div>
+
+					{#if previewMode === 'outline' || previewMode === 'characters'}
+						<!-- Resize handle — desktop only -->
+						<div
+							class="hidden md:flex resize-handle"
+							onmousedown={startResize}
+							ontouchstart={startResize}
+							aria-label="Resize panels"
+							role="separator"
+							tabindex="0"
+							onkeydown={(e) => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { splitPos = Math.max(20, Math.min(80, splitPos + (e.key === 'ArrowLeft' ? -2 : 2))); e.preventDefault(); } }}
+						>
+							<div class="resize-handle-dots"></div>
+						</div>
+
+						<div class="flex-1 min-w-0">
+							{#if previewMode === 'outline'}
+								<OutlinePreview {story} />
+							{:else}
+								<CharactersPreview {story} />
 							{/if}
 						</div>
 					{/if}
 				</div>
-
-				<!-- Preview toggle — cycles outline / characters / closed -->
-				
-					<button
-						onclick={cyclePreview}
-						class="btn-ghost flex items-center gap-1.5 px-3 py-1.5 text-xs"
-						style="min-height: 36px;"
-						aria-label="Cycle preview: {previewLabel()}"
-					>
-						<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-							{#if previewActive()}
-								<path d="M1.5 6.5s2-4 5-4 5 4 5 4-2 4-5 4-5-4-5-4Z" />
-								<circle cx="6.5" cy="6.5" r="1.5" />
-							{:else}
-								<line x1="1.5" y1="1.5" x2="11.5" y2="11.5" />
-								<path d="M4.8 3.4A5 5 0 0 1 6.5 2.5c3 0 5 4 5 4s-.6 1.2-1.7 2.2" />
-								<path d="M3 4.8A5.1 5.1 0 0 0 1.5 6.5s2 4 5 4c.9 0 1.8-.3 2.6-.8" />
-							{/if}
-						</svg>
-						<span class="text-xs font-medium">{previewLabel()}</span>
-					</button>
-
-				<!-- Screenplay Fountain preview toggle — only shows when toggling has immediate effect -->
-				{#if screenplayMode && previewMode === 'closed'}
-					<button
-						onclick={() => (previewVisible = !previewVisible)}
-						class="btn-ghost flex items-center justify-center px-2 py-1.5 text-xs"
-						style="min-height: 36px; min-width: 36px;"
-						aria-label={previewVisible ? 'Hide formatted preview' : 'Show formatted preview'}
-						title={previewVisible ? 'Hide formatted preview' : 'Show formatted preview'}
-					>
-						<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-							{#if previewVisible}
-								<path d="M1.5 6.5s2-4 5-4 5 4 5 4-2 4-5 4-5-4-5-4Z" />
-								<circle cx="6.5" cy="6.5" r="1.5" />
-							{:else}
-								<line x1="1.5" y1="1.5" x2="11.5" y2="11.5" />
-								<path d="M4.8 3.4A5 5 0 0 1 6.5 2.5c3 0 5 4 5 4s-.6 1.2-1.7 2.2" />
-								<path d="M3 4.8A5.1 5.1 0 0 0 1.5 6.5s2 4 5 4c.9 0 1.8-.3 2.6-.8" />
-							{/if}
-						</svg>
-					</button>
-				{/if}
-			</div>
-
-			<!-- Editor area — switches between Character panel, Scene editor, and Fountain editor -->
-			{#if characterMode}
+			{:else if characterMode}
 				{@const charResize = previewMode === 'outline' || previewMode === 'characters'}
 				<div class="flex flex-1 gap-3 md:gap-0 p-3 min-h-0 flex-col md:flex-row">
 					<!-- Character panel — resizable when preview is shown -->
