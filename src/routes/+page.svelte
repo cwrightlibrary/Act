@@ -389,7 +389,7 @@
 						<!-- svelte-ignore a11y_click_events_have_key_events -->
 						<!-- svelte-ignore a11y_interactive_supports_focus -->
 						<div
-							class="group story-card relative rounded-sm p-4 transition-all duration-200"
+							class="group story-card relative rounded-sm px-4 py-3.5 transition-all duration-200"
 							style="border: 1.5px solid var(--border-base); background: var(--bg-front);"
 							role="link"
 							tabindex="0"
@@ -411,93 +411,78 @@
 								{/if}
 							</button>
 
-							<div>
-								<h2 class="mb-1 line-clamp-1 text-sm font-semibold" style="color: var(--text-strong);" title={story.title}>
-									{story.title}
-								</h2>
-								{#if story.logline}
-									<p class="mb-2 line-clamp-2 text-xs" style="color: var(--text-muted);" title={story.logline}>{story.logline}</p>
-								{/if}
-							</div>
+							<!-- Title -->
+							<h2 class="mb-0.5 pr-8 text-sm font-semibold" style="color: var(--text-strong);" title={story.title}>
+								{story.title}
+							</h2>
 
-							<!-- Stats + actions row -->
-							<div class="mt-2 flex items-center justify-between" style="min-height: 22px;">
-								<div class="flex items-center gap-2 text-xs" style="color: var(--text-dim);">
-									<span>{story.acts?.length ?? 0} acts &middot; {story.acts?.reduce((sum, a) => sum + (a.scenes?.length ?? 0), 0) ?? 0} scenes</span>
-									{#if screenplayIds.has(story.id)}
-										<span
-											class="rounded-sm px-1.5 py-0.5 text-[10px] font-medium leading-none"
-											style="background: oklch(from var(--accent) l c h / 0.12); color: var(--accent);"
-										>Screenplay</span>
+							<!-- Bottom row: actions only -->
+							<div class="flex items-center justify-end -my-1">
+								<!-- Export .act button -->
+								<button
+									onclick={async (e) => { e.stopPropagation(); e.preventDefault(); const sp = await getScreenplayByStory(story.id); exportActFile(story, sp ?? null); }}
+									class="card-action-btn"
+									aria-label="Export story as .act file"
+									title="Export .act"
+								>
+									<svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+										<path d="M5.5 1v6M3.5 4.5l2 2 2-2" />
+										<path d="M1 7.5v1.5a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V7.5" />
+									</svg>
+								</button>
+								<!-- Color tag picker -->
+								<div class="relative flex items-center">
+									<button
+										onclick={(e) => toggleColorPicker(story.id, e)}
+										class="card-action-btn"
+										aria-label="Set color tag"
+										title="Color tag"
+									>
+										{#if story.color}
+											{@const hex = getColorHex(story.color)}
+											<span class="block h-3 w-3 rounded-full" style="background: {hex};"></span>
+										{:else}
+											<svg width="12" height="12" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+												<circle cx="5" cy="5" r="3.5" />
+											</svg>
+										{/if}
+									</button>
+
+									{#if colorPickerStoryId === story.id}
+										<!-- svelte-ignore a11y_click_events_have_key_events -->
+										<!-- svelte-ignore a11y_no_static_element_interactions -->
+										<div
+											class="color-picker-popup absolute bottom-full right-0 z-20 mb-1 flex gap-1 rounded-sm border p-1.5"
+											style="background: var(--bg-front); border-color: var(--border-strong);"
+											onclick={(e) => e.stopPropagation()}
+										>
+										<button
+											onclick={(e) => { e.stopPropagation(); setStoryColor(story.id, undefined); }}
+											class="flex h-5 w-5 items-center justify-center rounded-full"
+											style="border: 1.5px solid var(--border-base);"
+											aria-label="Remove color tag"
+											title="None"
+										>
+											<svg width="8" height="8" viewBox="0 0 6 6" fill="none" stroke="var(--text-dim)" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+												<line x1="1" y1="1" x2="5" y2="5" />
+												<line x1="5" y1="1" x2="1" y2="5" />
+											</svg>
+										</button>
+										{#each STORY_COLORS as c (c.id)}
+											<button
+												onclick={(e) => { e.stopPropagation(); setStoryColor(story.id, c.id); }}
+												class="h-5 w-5 rounded-full transition-transform duration-100"
+												class:scale-125={story.color === c.id}
+												style="background: {c.color}; border: 1.5px solid {story.color === c.id ? 'var(--text-strong)' : 'transparent'};"
+												aria-label={c.label}
+												title={c.label}
+											></button>
+										{/each}
+										</div>
 									{/if}
 								</div>
 
-								<div class="flex items-center -my-2">
-									<!-- Export .act button -->
-									<button
-										onclick={async (e) => { e.stopPropagation(); e.preventDefault(); const sp = await getScreenplayByStory(story.id); exportActFile(story, sp ?? null); }}
-										class="export-card-btn"
-										aria-label="Export story as .act file"
-										title="Export .act"
-									>
-										<svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-											<path d="M5.5 1v6M3.5 4.5l2 2 2-2" />
-											<path d="M1 7.5v1.5a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V7.5" />
-										</svg>
-									</button>
-									<!-- Color tag picker -->
-									<div class="relative flex items-center">
-										<button
-											onclick={(e) => toggleColorPicker(story.id, e)}
-											class="color-dot-btn"
-											aria-label="Set color tag"
-											title="Color tag"
-										>
-											{#if story.color}
-												{@const hex = getColorHex(story.color)}
-												<span class="block h-3 w-3 rounded-full" style="background: {hex};"></span>
-											{:else}
-												<svg width="12" height="12" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-													<circle cx="5" cy="5" r="3.5" />
-												</svg>
-											{/if}
-										</button>
-
-										{#if colorPickerStoryId === story.id}
-											<!-- svelte-ignore a11y_click_events_have_key_events -->
-											<!-- svelte-ignore a11y_no_static_element_interactions -->
-											<div
-												class="color-picker-popup absolute bottom-full right-0 z-20 mb-1 flex gap-1 rounded-sm border p-1.5"
-												style="background: var(--bg-front); border-color: var(--border-strong);"
-												onclick={(e) => e.stopPropagation()}
-											>
-											<button
-												onclick={(e) => { e.stopPropagation(); setStoryColor(story.id, undefined); }}
-												class="flex h-5 w-5 items-center justify-center rounded-full"
-												style="border: 1.5px solid var(--border-base);"
-												aria-label="Remove color tag"
-												title="None"
-											>
-												<svg width="8" height="8" viewBox="0 0 6 6" fill="none" stroke="var(--text-dim)" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-													<line x1="1" y1="1" x2="5" y2="5" />
-													<line x1="5" y1="1" x2="1" y2="5" />
-												</svg>
-											</button>
-											{#each STORY_COLORS as c (c.id)}
-												<button
-													onclick={(e) => { e.stopPropagation(); setStoryColor(story.id, c.id); }}
-													class="h-5 w-5 rounded-full transition-transform duration-100"
-													class:scale-125={story.color === c.id}
-													style="background: {c.color}; border: 1.5px solid {story.color === c.id ? 'var(--text-strong)' : 'transparent'};"
-													aria-label={c.label}
-													title={c.label}
-												></button>
-											{/each}
-											</div>
-										{/if}
-									</div>
-
-									<!-- Two-step inline delete -->
+								<!-- Two-step inline delete -->
 								{#if confirmDeleteId === story.id}
 									<span class="flex items-center gap-1 rounded-sm px-1.5 py-0.5" style="background: oklch(from var(--warm) l c h / 0.12);">
 										<span class="text-[10px] font-medium" style="color: var(--warm);">Delete?</span>
@@ -515,9 +500,9 @@
 								{:else}
 									<button
 										onclick={(e) => requestDelete(story.id, e)}
-										class="delete-btn rounded p-0.5 transition-all duration-200"
-										style="color: var(--text-dim);"
+										class="card-action-btn"
 										aria-label="Delete story"
+										title="Delete"
 									>
 										<svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
 											<line x1="1" y1="1" x2="10" y2="10" />
@@ -525,7 +510,6 @@
 										</svg>
 									</button>
 								{/if}
-								</div>
 							</div>
 
 							<!-- Hover overlay for subtle elevation -->
@@ -576,27 +560,6 @@
 		outline-offset: 2px;
 	}
 
-	/* Delete button: always subtly visible, full on hover/focus */
-	.delete-btn {
-		opacity: 0.35;
-		transition: opacity 0.15s ease-out;
-	}
-	.delete-btn:hover,
-	.delete-btn:focus-visible {
-		opacity: 1;
-	}
-	.group:hover .delete-btn,
-	.group:focus-within .delete-btn {
-		opacity: 1;
-	}
-
-	/* Touch-friendly: always visible */
-	@media (pointer: coarse) {
-		.delete-btn {
-			opacity: 0.5;
-		}
-	}
-
 	/* ── Color filter select ── */
 	.filter-select {
 		-webkit-appearance: none;
@@ -610,12 +573,12 @@
 		outline-offset: 2px;
 	}
 
-	/* ── Export card button ── */
-	.export-card-btn {
+	/* ── Card action buttons (export, color tag, delete) ── */
+	.card-action-btn {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 10px;
+		padding: 8px;
 		border: none;
 		background: none;
 		cursor: pointer;
@@ -624,46 +587,24 @@
 		transition: color 0.12s ease-out, background 0.12s ease-out;
 		opacity: 0.35;
 	}
-	.export-card-btn:hover {
+	.card-action-btn:hover,
+	.card-action-btn:focus-visible {
 		color: var(--text-muted);
 		background: var(--scene-btn-hover, oklch(0 0 0 / 0.06));
 		opacity: 1;
 	}
-	.export-card-btn:focus-visible {
+	.card-action-btn:focus-visible {
 		outline: 2px solid var(--focus-ring);
 		outline-offset: 2px;
-		opacity: 1;
 	}
-	.group:hover .export-card-btn,
-	.group:focus-within .export-card-btn {
+	.group:hover .card-action-btn,
+	.group:focus-within .card-action-btn {
 		opacity: 1;
 	}
 	@media (pointer: coarse) {
-		.export-card-btn {
+		.card-action-btn {
 			opacity: 0.5;
 		}
-	}
-
-	/* ── Color dot button ── */
-	.color-dot-btn {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 10px;
-		border: none;
-		background: none;
-		cursor: pointer;
-		color: var(--text-dim);
-		border-radius: var(--radius-sm);
-		transition: color 0.12s ease-out, background 0.12s ease-out;
-	}
-	.color-dot-btn:hover {
-		color: var(--text-muted);
-		background: var(--scene-btn-hover, oklch(0 0 0 / 0.06));
-	}
-	.color-dot-btn:focus-visible {
-		outline: 2px solid var(--focus-ring);
-		outline-offset: 2px;
 	}
 
 	/* ── Color picker popup ── */

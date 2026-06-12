@@ -21,7 +21,8 @@
 
 	// Resizable split position — percentage for left panel (editor/character panel)
 	let splitPos = $state(40);
-	let resizeInfo = $state<{ startX: number; startPct: number; container: HTMLElement } | null>(null);
+			let resizeInfo = $state<{ startX: number; startPct: number; container: HTMLElement } | null>(null);
+			let sidebarDetailsOpen = $state(false);
 
 	function startResize(e: MouseEvent | TouchEvent) {
 		const handle = e.currentTarget as HTMLElement;
@@ -57,12 +58,23 @@
 	});
 
 	function cyclePreview() {
+		// In screenplay mode: closed → fountain preview → outline → characters → closed
+		if (screenplayMode && previewMode === 'closed' && !previewVisible) {
+			previewVisible = true;
+			return;
+		}
+		if (screenplayMode && previewMode === 'closed' && previewVisible) {
+			previewVisible = false;
+			previewMode = 'outline';
+			return;
+		}
 		const modes: PreviewMode[] = ['closed', 'outline', 'characters'];
 		const idx = modes.indexOf(previewMode);
 		previewMode = modes[(idx + 1) % modes.length];
 	}
 
 	function previewLabel(): string {
+		if (screenplayMode && previewMode === 'closed' && previewVisible) return 'Preview';
 		switch (previewMode) {
 			case 'outline': return 'Outline';
 			case 'characters': return 'Characters';
@@ -530,8 +542,8 @@
 				class="sidebar-panel flex w-64 flex-shrink-0 flex-col overflow-y-auto border-r"
 				style="border-color: var(--border-strong); background: var(--bg-base);"
 			>
-				<!-- Story metadata -->
-				<div class="border-b px-4 py-4 space-y-3" style="border-color: var(--border-strong);">
+				<!-- Story metadata — title always visible; author/logline expandable -->
+				<div class="border-b px-4 py-4" style="border-color: var(--border-strong);">
 					<h1 class="sr-only" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;">{story.title}</h1>
 					<input
 						type="text"
@@ -542,24 +554,46 @@
 						aria-label="Story title"
 						placeholder="Story title"
 					/>
-					<input
-						type="text"
-						bind:value={story.author}
-						onchange={persist}
-						class="field-input w-full text-xs outline-none"
-						style="color: var(--text-muted);"
-						aria-label="Author"
-						placeholder="Author name"
-					/>
-					<textarea
-						bind:value={story.logline}
-						onchange={persist}
-						class="field-input w-full resize-none text-xs outline-none"
-						style="color: var(--text-muted); min-height: 2.5em;"
-						rows="2"
-						aria-label="Logline"
-						placeholder="A one- or two-sentence logline..."
-					></textarea>
+
+					<button
+						onclick={() => (sidebarDetailsOpen = !sidebarDetailsOpen)}
+						class="mt-2 flex items-center gap-1 text-xs"
+						style="color: var(--text-dim);"
+						aria-label="Toggle story details"
+					>
+						<svg
+							width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+							class="transition-transform duration-150"
+							class:rotate-90={sidebarDetailsOpen}
+							aria-hidden="true"
+						>
+							<path d="M2.5 1l3 3-3 3" />
+						</svg>
+						Details
+					</button>
+
+					{#if sidebarDetailsOpen}
+						<div class="mt-3 space-y-3">
+							<input
+								type="text"
+								bind:value={story.author}
+								onchange={persist}
+								class="field-input w-full text-xs outline-none"
+								style="color: var(--text-muted);"
+								aria-label="Author"
+								placeholder="Author name"
+							/>
+							<textarea
+								bind:value={story.logline}
+								onchange={persist}
+								class="field-input w-full resize-none text-xs outline-none"
+								style="color: var(--text-muted); min-height: 2.5em;"
+								rows="2"
+								aria-label="Logline"
+								placeholder="A one- or two-sentence logline..."
+							></textarea>
+						</div>
+					{/if}
 				</div>
 
 				<!-- Acts -->
@@ -600,64 +634,21 @@
 										ondragleave={handleSceneDragLeave}
 										data-act-id={act.id}
 										data-index={scene.order}
-										class="sidebar-scene-btn group relative flex w-full cursor-pointer items-start justify-between gap-1 px-3 py-2.5"
+										class="sidebar-scene-btn group relative flex w-full cursor-pointer items-center justify-between gap-1 px-3 py-2"
 										class:selected={selectedSceneId === scene.id}
 										class:dragging={dragInfo?.sceneId === scene.id}
 										class:drop-indicator={isDropTarget(act.id, scene.order)}
 										aria-label="Scene {scene.order + 1}: {scene.title || 'New Scene'}"
 									>
-										<div class="flex min-w-0 flex-1 flex-col items-start gap-0.5 scene-text-pad">
-											<span class="flex w-full min-w-0 items-center gap-2 text-xs">
-												<span class="flex-shrink-0" style="color: var(--text-muted);">{scene.order + 1}.</span>
-												<span class="font-medium" title={scene.title || 'New Scene'}>{scene.title || 'New Scene'}</span>
-											</span>
-											{#if scenePreview(scene)}
-												<span class="ml-4 line-clamp-2 text-xs" style="color: var(--text-muted); line-height: 1.3;" title={scenePreview(scene)}>
-													{scenePreview(scene)}
-												</span>
-											{/if}
-											{#if scene.characters.length > 0}
-												<span class="ml-4 flex items-center gap-1">
-													{#each scene.characters as charId (charId)}
-														{@const char = story?.characters.find(c => c.id === charId)}
-														{#if char}
-															<span
-																class="inline-block rounded-full"
-																style="width: 6px; height: 6px; background: {charRoleColor(charId)};"
-																title={char.name}
-															></span>
-														{/if}
-													{/each}
-												</span>
-											{/if}
-										</div>
-										<div class="scene-actions opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" class:opacity-100={selectedSceneId === scene.id}>
-											<button
-												onclick={(e) => { e.stopPropagation(); moveSceneUp(act.id, scene.id); }}
-												class="scene-move-btn"
-												aria-label="Move scene up"
-												disabled={!canMoveUp(act.id, scene.id)}
-											>
-												<svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-													<path d="M5 8V3" /><path d="M2.5 5.5L5 3l2.5 2.5" />
-												</svg>
-											</button>
-											<button
-												onclick={(e) => { e.stopPropagation(); moveSceneDown(act.id, scene.id); }}
-												class="scene-move-btn"
-												aria-label="Move scene down"
-												disabled={!canMoveDown(act.id, scene.id)}
-											>
-												<svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-													<path d="M5 2v5" /><path d="M2.5 4.5L5 7l2.5-2.5" />
-												</svg>
-											</button>
-											<button
-												onclick={(e) => { e.stopPropagation(); deleteScene(act.id, scene.id); }}
-												class="scene-delete-btn"
-												aria-label="Delete scene"
-											>&times;</button>
-										</div>
+										<span class="flex min-w-0 items-center gap-2 text-xs">
+											<span class="flex-shrink-0" style="color: var(--text-muted);">{scene.order + 1}.</span>
+											<span class="truncate font-medium" title={scene.title || 'New Scene'}>{scene.title || 'New Scene'}</span>
+										</span>
+										<button
+											onclick={(e) => { e.stopPropagation(); deleteScene(act.id, scene.id); }}
+											class="scene-delete-btn"
+											aria-label="Delete scene"
+										>&times;</button>
 									</div>
 								{/each}
 
@@ -718,14 +709,14 @@
 
 		<!-- Editor area -->
 		<div class="flex flex-1 flex-col min-h-0">
-			<!-- Editor header bar -->
-			<div class="flex items-center border-b px-1" style="border-color: var(--border-strong); background: var(--bg-base);">
+			<!-- Editor header bar — simplified -->
+			<div class="flex items-center border-b px-1" style="border-color: var(--border-strong); background: var(--bg-base); min-height: 44px;">
 				<div class="flex items-center flex-shrink-0">
 					<button
 						onclick={() => (sidebarOpen = !sidebarOpen)}
-						class="btn-ghost flex items-center justify-center px-3 py-2"
-						aria-label="Toggle sidebar"
+						class="btn-ghost flex items-center justify-center px-3"
 						style="min-height: 44px;"
+						aria-label="Toggle sidebar"
 					>
 						<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
 							{#if sidebarOpen}
@@ -739,30 +730,6 @@
 							{/if}
 						</svg>
 					</button>
-
-					<!-- Mode toggle: Scenes / Screenplay / Characters / Notes -->
-					<div class="mode-toggle-group ml-1 flex items-center gap-0.5 rounded-sm border" style="border-color: var(--border-base);">
-						<button
-							onclick={() => { screenplayMode = false; characterMode = false; notesMode = false; }}
-							class="mode-toggle-btn"
-							class:active={!screenplayMode && !characterMode && !notesMode}
-						>Scenes</button>
-						<button
-							onclick={() => { screenplayMode = false; characterMode = false; notesMode = false; setTimeout(() => { screenplayMode = true; }, 0); }}
-							class="mode-toggle-btn"
-							class:active={screenplayMode && !characterMode}
-						>Screenplay</button>
-						<button
-							onclick={() => { characterMode = !characterMode; if (characterMode) { screenplayMode = false; notesMode = false; } }}
-							class="mode-toggle-btn"
-							class:active={characterMode}
-						>Characters</button>
-						<button
-							onclick={() => { notesMode = !notesMode; if (notesMode) { screenplayMode = false; characterMode = false; } }}
-							class="mode-toggle-btn"
-							class:active={notesMode}
-						>Notes</button>
-					</div>
 				</div>
 
 				<!-- Story title — centered -->
@@ -776,21 +743,21 @@
 					</h1>
 				</div>
 
-				<!-- Right-side actions -->
-				<div class="flex items-center gap-1 flex-shrink-0">
-					<!-- Export (always visible) -->
+				<!-- Right-side actions — icon only -->
+				<div class="flex items-center gap-0.5 flex-shrink-0">
+					<!-- Export -->
 					<div class="relative" bind:this={exportContainer}>
 						<button
 							onclick={() => (exportOpen = !exportOpen)}
-							class="btn-ghost flex items-center gap-1.5 px-3 py-1.5 text-xs"
-							style="min-height: 36px;"
+							class="btn-ghost flex items-center justify-center px-2"
+							style="min-height: 36px; min-width: 36px;"
 							aria-label="Export"
+							title="Export"
 						>
-							<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+							<svg width="14" height="14" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
 								<path d="M6.5 1v7M4 5.5l2.5 2.5L9 5.5" />
 								<path d="M1 8.5v2.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V8.5" />
 							</svg>
-							<span class="text-xs font-medium">Export</span>
 						</button>
 
 						{#if exportOpen}
@@ -834,77 +801,54 @@
 					</div>
 
 					<!-- Preview toggle — cycles outline / characters / closed -->
-					
-						<button
-							onclick={cyclePreview}
-							class="btn-ghost flex items-center gap-1.5 px-3 py-1.5 text-xs"
-							style="min-height: 36px;"
-							aria-label="Cycle preview: {previewLabel()}"
-						>
-							<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-								{#if previewActive()}
-									<path d="M1.5 6.5s2-4 5-4 5 4 5 4-2 4-5 4-5-4-5-4Z" />
-									<circle cx="6.5" cy="6.5" r="1.5" />
-								{:else}
-									<line x1="1.5" y1="1.5" x2="11.5" y2="11.5" />
-									<path d="M4.8 3.4A5 5 0 0 1 6.5 2.5c3 0 5 4 5 4s-.6 1.2-1.7 2.2" />
-									<path d="M3 4.8A5.1 5.1 0 0 0 1.5 6.5s2 4 5 4c.9 0 1.8-.3 2.6-.8" />
-								{/if}
-							</svg>
-							<span class="text-xs font-medium">{previewLabel()}</span>
-						</button>
+					<button
+						onclick={cyclePreview}
+						class="btn-ghost flex items-center justify-center px-2"
+						style="min-height: 36px; min-width: 36px;"
+						aria-label="Cycle preview: {previewLabel()}"
+						title={previewLabel()}
+					>
+						<svg width="14" height="14" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+							{#if previewActive()}
+								<path d="M1.5 6.5s2-4 5-4 5 4 5 4-2 4-5 4-5-4-5-4Z" />
+								<circle cx="6.5" cy="6.5" r="1.5" />
+							{:else}
+								<line x1="1.5" y1="1.5" x2="11.5" y2="11.5" />
+								<path d="M4.8 3.4A5 5 0 0 1 6.5 2.5c3 0 5 4 5 4s-.6 1.2-1.7 2.2" />
+								<path d="M3 4.8A5.1 5.1 0 0 0 1.5 6.5s2 4 5 4c.9 0 1.8-.3 2.6-.8" />
+							{/if}
+						</svg>
+					</button>
 
-					<!-- Screenplay Fountain preview toggle -->
-					{#if screenplayMode && previewMode === 'closed'}
-						<button
-							onclick={() => (previewVisible = !previewVisible)}
-							class="btn-ghost flex items-center justify-center px-2 py-1.5 text-xs"
-							style="min-height: 36px; min-width: 36px;"
-							aria-label={previewVisible ? 'Hide formatted preview' : 'Show formatted preview'}
-							title={previewVisible ? 'Hide formatted preview' : 'Show formatted preview'}
-						>
-							<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-								{#if previewVisible}
-									<path d="M1.5 6.5s2-4 5-4 5 4 5 4-2 4-5 4-5-4-5-4Z" />
-									<circle cx="6.5" cy="6.5" r="1.5" />
-								{:else}
-									<line x1="1.5" y1="1.5" x2="11.5" y2="11.5" />
-									<path d="M4.8 3.4A5 5 0 0 1 6.5 2.5c3 0 5 4 5 4s-.6 1.2-1.7 2.2" />
-									<path d="M3 4.8A5.1 5.1 0 0 0 1.5 6.5s2 4 5 4c.9 0 1.8-.3 2.6-.8" />
-								{/if}
-							</svg>
-						</button>
-					{/if}
+
 				</div>
 			</div>
 
-			<!-- Scene bar — compact row below header, Scenes mode only -->
-			{#if !screenplayMode && !characterMode && !notesMode && selectedScene()}
-				{@const scene = selectedScene()!}
-				<div class="hidden md:flex items-center border-b gap-3 px-4" style="border-color: var(--border-strong); background: var(--bg-base); min-height: 40px;">
-					<input
-						type="text"
-						bind:value={scene.title}
-						onchange={persist}
-						class="field-input min-w-0 flex-1 text-sm font-medium outline-none"
-						style="color: var(--text-strong);"
-						placeholder="Scene title"
-						aria-label="Scene title"
-					/>
-					<span class="flex-shrink-0 text-xs" style="color: var(--text-dim);">—</span>
-					<input
-						type="text"
-						bind:value={scene.summary}
-						onchange={persist}
-						class="field-input min-w-0 flex-[2] text-sm outline-none"
-						style="color: var(--text-muted);"
-						placeholder="Brief summary of this scene…"
-						aria-label="Scene summary"
-					/>
-				</div>
-			{/if}
+			<!-- Mode tabs — attached to top of editor panel -->
+			<div class="editor-tabs flex items-center border-b" style="border-color: var(--border-strong); background: var(--bg-base); min-height: 36px;">
+				<button
+					onclick={() => { screenplayMode = false; characterMode = false; notesMode = false; }}
+					class="editor-tab"
+					class:active={!screenplayMode && !characterMode && !notesMode}
+				>Scenes</button>
+				<button
+					onclick={() => { screenplayMode = false; characterMode = false; notesMode = false; setTimeout(() => { screenplayMode = true; }, 0); }}
+					class="editor-tab"
+					class:active={screenplayMode && !characterMode && !notesMode}
+				>Screenplay</button>
+				<button
+					onclick={() => { characterMode = !characterMode; if (characterMode) { screenplayMode = false; notesMode = false; } }}
+					class="editor-tab"
+					class:active={characterMode}
+				>Characters</button>
+				<button
+					onclick={() => { notesMode = !notesMode; if (notesMode) { screenplayMode = false; characterMode = false; } }}
+					class="editor-tab"
+					class:active={notesMode}
+				>Notes</button>
+			</div>
 
-			<!-- Editor area — switches between Notes, Characters, Screenplay, and Scenes modes -->
+			<!-- Editor content — switches between Notes, Characters, Screenplay, and Scenes modes -->
 			{#if notesMode}
 				{@const notesResize = previewMode === 'outline' || previewMode === 'characters'}
 				<div class="flex flex-1 gap-3 md:gap-0 p-3 min-h-0 flex-col md:flex-row">
@@ -1070,6 +1014,28 @@
 						style:width={sceneResize ? splitPos + '%' : undefined}
 						style:flex={sceneResize ? 'none' : undefined}
 					>
+						<!-- Scene title + summary (within editor panel) -->
+						<div class="hidden md:flex items-center gap-2 px-3 border-b" style="border-color: var(--border-base); background: var(--bg-base); min-height: 36px;">
+							<input
+								type="text"
+								bind:value={scene.title}
+								onchange={persist}
+								class="field-input min-w-0 flex-1 text-xs font-medium outline-none"
+								style="color: var(--text-strong);"
+								placeholder="Scene title"
+								aria-label="Scene title"
+							/>
+							<span class="flex-shrink-0 text-[10px]" style="color: var(--text-dim);">—</span>
+							<input
+								type="text"
+								bind:value={scene.summary}
+								onchange={persist}
+								class="field-input min-w-0 flex-[2] text-xs outline-none"
+								style="color: var(--text-muted);"
+								placeholder="Brief summary..."
+								aria-label="Scene summary"
+							/>
+						</div>
 						<div class="flex-1 overflow-y-auto min-h-0 h-0">
 							<SceneEditor
 								content={scene.content}
