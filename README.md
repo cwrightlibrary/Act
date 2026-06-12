@@ -11,21 +11,19 @@ A modern, **local-first** writing app for screenwriters and storytellers. Build 
 
 📐 **Story Templates** — Start with a blank slate or one of six built-in story structures: Three-Act, Hero's Journey, Save the Cat, Freytag's Pyramid, 7-Point, or blank. Each comes with pre-written scene titles and summaries to scaffold your outline.
 
-👤 **Character Management** — Add characters with names, descriptions, and role badges (protagonist, antagonist, supporting). Scene assignments show as color-coded dots in the sidebar. Characters mode gives you a dedicated overview panel.
-
-✍️ **Three-Editor Modes** — Switch between **Scenes** (rich-text per scene), **Screenplay** (Fountain plain-text with syntax highlighting), and **Characters** (inline-editable cards). Use the toolbar or `Cmd+K` / `Ctrl+K` to cycle.
+✍️ **Four Editing Modes** — Switch between **Scenes** (rich-text per scene), **Screenplay** (Fountain plain-text with syntax highlighting), **Characters** (inline-editable cards), and **Notes** (story-level rich text) via tabs at the top of the editor panel.
 
 📄 **Live Fountain Preview** — Write in industry-standard Fountain format and see it rendered as a proper screenplay in real-time. An inline help panel covers all 12 rules.
 
-📊 **Outline & Character Previews** — Cycle the right panel through **closed**, **outline** (condensed act/scene summary), and **characters** (all characters at a glance) with a single toggle.
+📊 **Outline & Character Previews** — Cycle the right panel through **closed**, **outline** (condensed act/scene summary), and **characters** (all characters at a glance) with a single toggle. In Screenplay mode, the cycle includes the **Fountain preview** between closed and outline.
 
-🔄 **Drag & Drop Reordering** — Drag scenes within an act or across acts to restructure your story. Visual drop indicators show exactly where a scene will land.
+🔒 **Privacy First** — Zero data ever leaves your device. No accounts, no sign-ups, no tracking, no cloud sync. All data stays in your browser's IndexedDB.
 
 ↔️ **Resizable Panels** — Drag the handle between editor and preview to reclaim space. Works with mouse, touch, and keyboard (ArrowLeft / ArrowRight).
 
-📤 **Export & Import** — Export as **Markdown**, **PDF**, or **Fountain**. Import or export full stories as `.act` files — a portable JSON envelope that includes both the story structure and screenplay content, with automatic ID regeneration on import.
+🔄 **Drag & Drop Reordering** — Drag scenes within an act or across acts to restructure your story. Visual drop indicators show exactly where a scene will land.
 
-💾 **Local-First** — Everything lives in your browser via IndexedDB. No accounts, no servers, no syncing hassles. Your data stays yours.
+📤 **Export & Import** — Export as **Markdown**, **PDF**, **Fountain**, or **.act** (portable JSON envelope with auto-ID regeneration on import). Download individual screenplays directly from the dashboard.
 
 🎨 **Light, Dark & OLED Modes** — Three carefully crafted themes for any environment. Switches are instant.
 
@@ -35,13 +33,17 @@ A modern, **local-first** writing app for screenwriters and storytellers. Build 
 
 ## Screenshots
 
-![Act dashboard](screenshots/dashboard.png)
+| Dashboard | Scenes Editor |
+|---|---|
+| ![Dashboard](screenshots/dashboard.png) | ![Scenes editor](screenshots/editor-scenes.png) |
 
-![New story dialog](screenshots/new-story.png)
+| Outline Preview | Characters Preview |
+|---|---|
+| ![Outline preview](screenshots/editor-outline.png) | ![Characters preview](screenshots/editor-characters.png) |
 
-![Outline preview](screenshots/outline-preview.png)
-
-![Screenplay preview](screenshots/screenplay-preview.png)
+| Screenplay Mode | Fountain Preview |
+|---|---|
+| ![Screenplay editor](screenshots/editor-screenplay.png) | ![Fountain live preview](screenshots/editor-fountain-preview.png) |
 
 ## Getting Started
 
@@ -100,13 +102,14 @@ act/
 │   ├── routes/                # SvelteKit pages (dashboard, story editor)
 │   ├── lib/
 │   │   ├── components/        # Reusable UI components
-│   │   │   ├── CharacterPanel.svelte    # Character management with inline editing
+│   │   │   ├── CharacterPanel.svelte     # Character management with inline editing
 │   │   │   ├── CharactersPreview.svelte  # Shared character-overview card
-│   │   │   ├── FountainEditor.svelte    # Syntax-highlighted Fountain editor
-│   │   │   ├── FountainPreview.svelte   # Formatted screenplay preview
-│   │   │   ├── OutlinePreview.svelte    # Shared story-outline card
-│   │   │   ├── SceneEditor.svelte       # TipTap rich-text editor
-│   │   │   └── TemplatePicker.svelte    # Modal dialog for story templates
+│   │   │   ├── FountainEditor.svelte     # Syntax-highlighted Fountain editor
+│   │   │   ├── FountainPreview.svelte    # Formatted screenplay preview
+│   │   │   ├── NotesEditor.svelte        # TipTap rich-text notes editor
+│   │   │   ├── OutlinePreview.svelte     # Shared story-outline card
+│   │   │   ├── SceneEditor.svelte        # TipTap rich-text editor per scene
+│   │   │   └── TemplatePicker.svelte     # Modal dialog for story templates
 │   │   ├── domain/            # Core story logic
 │   │   │   ├── story.ts       # Types & factories (Story, Act, Scene, Character, Screenplay)
 │   │   │   └── templates.ts   # 6 built-in template definitions + factory
@@ -134,11 +137,14 @@ act/
 ### Styling & UI
 
 - **[Tailwind CSS 4](https://tailwindcss.com)** — Utility-first CSS for rapid design
+- **[Tailwind Typography](https://github.com/tailwindlabs/tailwindcss-typography)** — Prose styling for rich-text content
 - **IBM Plex Sans** — Warm, humanist sans-serif typeface throughout
+- **Courier Prime** — Monospace typeface for Fountain screenplay text
 
 ### Editor & Content
 
 - **[TipTap](https://www.tiptap.dev)** — Headless rich-text editor (bold, italic, lists, headings)
+- **[ProseMirror](https://prosemirror.net)** — Underlying rich-text engine for TipTap
 - **[Fountain.js](https://github.com/mattduvall/fountain-js)** — Parse & render Fountain screenplay syntax
 - **[Turndown](https://github.com/domchristie/turndown)** — Convert HTML to Markdown
 - **[jsPDF](https://github.com/parallax/jsPDF)** — Generate PDFs in the browser
@@ -167,7 +173,7 @@ Act is ready to deploy to **Cloudflare Pages** (or any static host).
    - Build command: `npm run cf-build`
    - Build output directory: `build`
 
-3. Deploy on every push — automatic! 🚀
+3. Deploy on every push — automatic!
 
 ### Other Platforms
 
@@ -183,8 +189,19 @@ Act works on any static host:
 3. **Structure as guide** — Templates and acts are optional scaffolding, not a cage.
 4. **Accessibility** — WCAG AA compliant, dark mode, keyboard navigation, reduced motion support, large touch targets.
 5. **No clutter** — Every element earns its place.
+6. **Zero data transmission** — The app makes no network requests (except optional font loading). Your work never leaves your device.
 
 See [DESIGN.md](DESIGN.md) for the full design system, color palette, and component specifications.
+
+## Privacy
+
+Act is built from the ground up as a **local-first** application:
+
+- **No accounts or sign-ups** — No registration, no login wall.
+- **No cloud sync** — All data persists in your browser's IndexedDB.
+- **No analytics or tracking** — No cookies, no telemetry, no third-party scripts.
+- **Optional external requests** — Google Fonts (Courier Prime) can be removed or self-hosted for a fully offline experience.
+- **Hardened deployment** — Deploy with a Content Security Policy for defense-in-depth (see `_headers`).
 
 ## Browser Support
 

@@ -513,6 +513,7 @@
 	/* ── TipTap / ProseMirror editor overrides ── */
 
 	/* Word-wrap: ensure text reflows when container width changes (e.g. split panel resize) */
+	/* max-width: none overrides Tailwind Typography's prose max-width (65ch) */
 	.ProseMirror {
 		overflow-wrap: break-word;
 		word-wrap: break-word;
@@ -520,6 +521,13 @@
 		white-space: pre-wrap;
 		width: 100%;
 		height: 100%;
+		max-width: none;
+	}
+
+	/* Override the global p { max-width: 75ch } inside rich-text editors
+	   so paragraphs fill the full container width */
+	.ProseMirror p {
+		max-width: none;
 	}
 
 	/* List rendering in rich-text editors */

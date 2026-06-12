@@ -360,9 +360,11 @@ html, body { background: #fff; color: #000; font-family: 'Courier Prime', 'Couri
 <head>
 <meta charset="UTF-8">
 <title>${escapeHtml(storyTitle)} — Screenplay</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+@font-face { font-family: 'Courier Prime'; font-style: normal; font-weight: 400; src: url('/fonts/courier-prime-400.woff2') format('woff2'); font-display: swap; }
+@font-face { font-family: 'Courier Prime'; font-style: normal; font-weight: 700; src: url('/fonts/courier-prime-700.woff2') format('woff2'); font-display: swap; }
+@font-face { font-family: 'Courier Prime'; font-style: italic; font-weight: 400; src: url('/fonts/courier-prime-400i.woff2') format('woff2'); font-display: swap; }
+</style>
 <style>${printCSS}</style>
 </head>
 <body>
