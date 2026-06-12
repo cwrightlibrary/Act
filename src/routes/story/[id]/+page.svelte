@@ -527,11 +527,11 @@
 				role="presentation"
 			></div>
 			<aside
-				class="sidebar-panel flex w-60 flex-shrink-0 flex-col overflow-y-auto border-r"
+				class="sidebar-panel flex w-64 flex-shrink-0 flex-col overflow-y-auto border-r"
 				style="border-color: var(--border-strong); background: var(--bg-base);"
 			>
 				<!-- Story metadata -->
-				<div class="border-b px-4 py-3 space-y-2" style="border-color: var(--border-strong);">
+				<div class="border-b px-4 py-4 space-y-3" style="border-color: var(--border-strong);">
 					<h1 class="sr-only" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;">{story.title}</h1>
 					<input
 						type="text"
@@ -563,16 +563,16 @@
 				</div>
 
 				<!-- Acts -->
-				<div class="flex-1 overflow-y-auto px-3 py-3">
+				<div class="flex-1 overflow-y-auto px-3 py-4">
 					{#each story.acts as act (act.id)}
-						<div class="mb-4 group">
-							<div class="mb-1 flex items-center justify-between gap-2 px-2">
+						<div class="mb-5 group">
+							<div class="mb-1.5 flex items-center justify-between gap-2 px-2">
 								<input
 									type="text"
 									bind:value={act.title}
 									onchange={persist}
-									class="field-input min-w-0 flex-1 text-xs font-semibold outline-none"
-									style="color: var(--text-base);"
+									class="field-input min-w-0 flex-1 text-sm font-semibold outline-none"
+									style="color: var(--text-strong);"
 									aria-label="Act title"
 								/>
 								<div class="flex flex-shrink-0 items-center gap-1">
@@ -600,7 +600,7 @@
 										ondragleave={handleSceneDragLeave}
 										data-act-id={act.id}
 										data-index={scene.order}
-										class="sidebar-scene-btn group relative flex w-full cursor-pointer items-start justify-between gap-1 px-2 py-2"
+										class="sidebar-scene-btn group relative flex w-full cursor-pointer items-start justify-between gap-1 px-3 py-2.5"
 										class:selected={selectedSceneId === scene.id}
 										class:dragging={dragInfo?.sceneId === scene.id}
 										class:drop-indicator={isDropTarget(act.id, scene.order)}
@@ -688,9 +688,9 @@
 								>
 									<button
 										onclick={() => addScene(act.id)}
-										class="sidebar-action-btn w-full px-2 py-2 text-left text-xs"
+										class="sidebar-action-btn w-full px-3 py-2.5 text-left text-xs"
 									>
-										{dragInfo && dropTargetActId === act.id && dropIndex === null ? 'Drop here to append' : 'Add Scene'}
+										{dragInfo && dropTargetActId === act.id && dropIndex === null ? 'Drop here to append' : '+ Add Scene'}
 									</button>
 								</div>
 							</div>
@@ -700,17 +700,17 @@
 					<!-- Add Act -->
 					<button
 						onclick={addAct}
-						class="sidebar-action-btn w-full px-2 py-2 text-xs"
+						class="sidebar-action-btn w-full px-3 py-2.5 text-xs font-semibold"
 					>
-						Add Act
+						+ Add Act
 					</button>
 				</div>
 
 				<!-- Footer stats -->
-				<div class="border-t px-4 py-2" style="border-color: var(--border-strong);">
+				<div class="border-t px-4 py-3" style="border-color: var(--border-strong);">
 					<div class="flex items-center justify-between text-xs" style="color: var(--text-muted);">
-						<span>{story.acts.length} acts</span>
-						<span>{totalWordCount()} words</span>
+						<span>{story.acts.length} {story.acts.length === 1 ? 'act' : 'acts'}</span>
+						<span>{totalWordCount()} {totalWordCount() === 1 ? 'word' : 'words'}</span>
 					</div>
 				</div>
 			</aside>
@@ -741,26 +741,26 @@
 					</button>
 
 					<!-- Mode toggle: Scenes / Screenplay / Characters / Notes -->
-					<div class="ml-1 flex items-center gap-0.5 rounded-sm border" style="border-color: var(--border-base);">
+					<div class="mode-toggle-group ml-1 flex items-center gap-0.5 rounded-sm border" style="border-color: var(--border-base);">
 						<button
 							onclick={() => { screenplayMode = false; characterMode = false; notesMode = false; }}
-							class="px-3 py-1.5 text-xs font-medium transition-colors"
-							style="background: {!screenplayMode && !characterMode && !notesMode ? 'var(--bg-front)' : 'transparent'}; color: {!screenplayMode && !characterMode && !notesMode ? 'var(--text-strong)' : 'var(--text-muted)'}; border-radius: 2px; border: none; cursor: pointer; min-height: 36px;"
+							class="mode-toggle-btn"
+							class:active={!screenplayMode && !characterMode && !notesMode}
 						>Scenes</button>
 						<button
 							onclick={() => { screenplayMode = false; characterMode = false; notesMode = false; setTimeout(() => { screenplayMode = true; }, 0); }}
-							class="px-3 py-1.5 text-xs font-medium transition-colors"
-							style="background: {screenplayMode && !characterMode ? 'var(--bg-front)' : 'transparent'}; color: {screenplayMode && !characterMode ? 'var(--text-strong)' : 'var(--text-muted)'}; border-radius: 2px; border: none; cursor: pointer; min-height: 36px;"
+							class="mode-toggle-btn"
+							class:active={screenplayMode && !characterMode}
 						>Screenplay</button>
 						<button
 							onclick={() => { characterMode = !characterMode; if (characterMode) { screenplayMode = false; notesMode = false; } }}
-							class="px-3 py-1.5 text-xs font-medium transition-colors"
-							style="background: {characterMode ? 'var(--bg-front)' : 'transparent'}; color: {characterMode ? 'var(--text-strong)' : 'var(--text-muted)'}; border-radius: 2px; border: none; cursor: pointer; min-height: 36px;"
+							class="mode-toggle-btn"
+							class:active={characterMode}
 						>Characters</button>
 						<button
 							onclick={() => { notesMode = !notesMode; if (notesMode) { screenplayMode = false; characterMode = false; } }}
-							class="px-3 py-1.5 text-xs font-medium transition-colors"
-							style="background: {notesMode ? 'var(--bg-front)' : 'transparent'}; color: {notesMode ? 'var(--text-strong)' : 'var(--text-muted)'}; border-radius: 2px; border: none; cursor: pointer; min-height: 36px;"
+							class="mode-toggle-btn"
+							class:active={notesMode}
 						>Notes</button>
 					</div>
 				</div>
@@ -881,12 +881,12 @@
 			<!-- Scene bar — compact row below header, Scenes mode only -->
 			{#if !screenplayMode && !characterMode && !notesMode && selectedScene()}
 				{@const scene = selectedScene()!}
-				<div class="hidden md:flex items-center border-b gap-2 px-3" style="border-color: var(--border-strong); background: var(--bg-base); min-height: 32px;">
+				<div class="hidden md:flex items-center border-b gap-3 px-4" style="border-color: var(--border-strong); background: var(--bg-base); min-height: 40px;">
 					<input
 						type="text"
 						bind:value={scene.title}
 						onchange={persist}
-						class="field-input min-w-0 flex-1 text-xs font-medium outline-none"
+						class="field-input min-w-0 flex-1 text-sm font-medium outline-none"
 						style="color: var(--text-strong);"
 						placeholder="Scene title"
 						aria-label="Scene title"
@@ -896,7 +896,7 @@
 						type="text"
 						bind:value={scene.summary}
 						onchange={persist}
-						class="field-input min-w-0 flex-[2] text-xs outline-none"
+						class="field-input min-w-0 flex-[2] text-sm outline-none"
 						style="color: var(--text-muted);"
 						placeholder="Brief summary of this scene…"
 						aria-label="Scene summary"

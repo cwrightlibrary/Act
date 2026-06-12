@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { getAllStories, deleteStory, getAllScreenplays, saveStory } from '$lib/persistence/db';
+	import { getAllStories, deleteStory, getAllScreenplays, getScreenplayByStory, saveStory } from '$lib/persistence/db';
 	import type { Story } from '$lib/domain/story';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { importActFile, ActImportError } from '$lib/import';
+	import { exportActFile } from '$lib/export';
 	import TemplatePicker from '$lib/components/TemplatePicker.svelte';
 
 	// ── Color palette ──
@@ -239,9 +240,6 @@
 				<button onclick={triggerImport} disabled={importing} class="sidebar-action-btn rounded-sm px-3 py-1.5 text-sm"
 					>Import</button
 				>
-				<button onclick={handleNewStory} class="sidebar-action-btn rounded-sm px-3 py-1.5 text-sm"
-					>New Story</button
-				>
 			</div>
 		</div>
 
@@ -314,30 +312,31 @@
 						/>
 					</div>
 
-					<!-- Color filter -->
-					<div class="flex items-center -my-2 flex-shrink-0">
-						<button
-							onclick={() => (colorFilter = null)}
-							class="flex items-center justify-center rounded-full transition-all duration-150 filter-color-btn"
-							style="border: 1.5px solid {colorFilter === null ? 'var(--text-strong)' : 'var(--border-base)'}; background: transparent;"
-							aria-label="Show all colors"
-							title="All"
-						>
-							<svg width="10" height="10" viewBox="0 0 8 8" fill="none" stroke="var(--text-dim)" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-								<line x1="1" y1="1" x2="7" y2="7" />
-								<line x1="7" y1="1" x2="1" y2="7" />
-							</svg>
-						</button>
+					<!-- Color filter dropdown -->
+				<div class="relative flex-shrink-0">
+					<select
+						aria-label="Filter by color"
+						value={colorFilter ?? ''}
+						onchange={(e) => {
+							const val = (e.target as HTMLSelectElement).value;
+							colorFilter = val || null;
+						}}
+						class="filter-select rounded-sm py-1.5 pl-2 pr-7 text-xs outline-none appearance-none"
+						style="border: 1.5px solid var(--border-base); background: var(--bg-front); color: var(--text-base); min-width: 7rem; cursor: pointer;"
+					>
+						<option value="">All colors</option>
 						{#each STORY_COLORS as c (c.id)}
-							<button
-								onclick={() => (colorFilter = colorFilter === c.id ? null : c.id)}
-								class="rounded-full transition-all duration-150 filter-color-btn"
-								style="background: {c.color}; border: 1.5px solid {colorFilter === c.id ? 'var(--text-strong)' : 'transparent'}; outline-color: {colorFilter === c.id ? c.color : 'transparent'}; outline-style: {colorFilter === c.id ? 'solid' : 'none'}; outline-width: 1.5px; outline-offset: 1px;"
-								aria-label="Filter by {c.label}"
-								title={c.label}
-							></button>
+							<option value={c.id}>&bull; {c.label}</option>
 						{/each}
-					</div>
+					</select>
+					<svg
+						width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+						class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2"
+						style="color: var(--text-dim);" aria-hidden="true"
+					>
+						<path d="M2 3.5l3 3 3-3" />
+					</svg>
+				</div>
 				</div>
 
 				<!-- Bulk action bar -->
@@ -434,6 +433,18 @@
 								</div>
 
 								<div class="flex items-center -my-2">
+									<!-- Export .act button -->
+									<button
+										onclick={async (e) => { e.stopPropagation(); e.preventDefault(); const sp = await getScreenplayByStory(story.id); exportActFile(story, sp ?? null); }}
+										class="export-card-btn"
+										aria-label="Export story as .act file"
+										title="Export .act"
+									>
+										<svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+											<path d="M5.5 1v6M3.5 4.5l2 2 2-2" />
+											<path d="M1 7.5v1.5a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V7.5" />
+										</svg>
+									</button>
 									<!-- Color tag picker -->
 									<div class="relative flex items-center">
 										<button
@@ -586,16 +597,51 @@
 		}
 	}
 
-	/* ── Color filter bar buttons ── */
-	.filter-color-btn {
-		width: 28px;
-		height: 28px;
-		padding: 0;
-		cursor: pointer;
+	/* ── Color filter select ── */
+	.filter-select {
+		-webkit-appearance: none;
+		-moz-appearance: none;
 	}
-	.filter-color-btn:focus-visible {
+	.filter-select option {
+		padding: 0.25rem 0.5rem;
+	}
+	.filter-select:focus-visible {
 		outline: 2px solid var(--focus-ring);
 		outline-offset: 2px;
+	}
+
+	/* ── Export card button ── */
+	.export-card-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 10px;
+		border: none;
+		background: none;
+		cursor: pointer;
+		color: var(--text-dim);
+		border-radius: var(--radius-sm);
+		transition: color 0.12s ease-out, background 0.12s ease-out;
+		opacity: 0.35;
+	}
+	.export-card-btn:hover {
+		color: var(--text-muted);
+		background: var(--scene-btn-hover, oklch(0 0 0 / 0.06));
+		opacity: 1;
+	}
+	.export-card-btn:focus-visible {
+		outline: 2px solid var(--focus-ring);
+		outline-offset: 2px;
+		opacity: 1;
+	}
+	.group:hover .export-card-btn,
+	.group:focus-within .export-card-btn {
+		opacity: 1;
+	}
+	@media (pointer: coarse) {
+		.export-card-btn {
+			opacity: 0.5;
+		}
 	}
 
 	/* ── Color dot button ── */
